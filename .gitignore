@@ -1,0 +1,36 @@
+# Build artifacts
+bin/
+obj/
+
+# VS/JetBrains/VSCode
+.vs/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# VS Code
+.vscode/
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+project.lock.json
+project.fragment.lock.json
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Blazor/WebAssembly
+wwwroot/*.gz
+wwwroot/*.br
+
+# Node
+node_modules/

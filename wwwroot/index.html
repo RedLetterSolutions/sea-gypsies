@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SeaGypsies</title>
+    <base href="/" />
+    <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="css/app.css" />
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <link href="SeaGypsies.styles.css" rel="stylesheet" />
+    <style>
+        /* Loading screen color before Blazor mounts */
+        html, body, #app {
+            height: 100%;
+            margin: 0;
+        }
+        #app {
+            background: #256878;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app"></div>
+
+    <div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="." class="reload">Reload</a>
+        <span class="dismiss">🗙</span>
+    </div>
+    <script src="_framework/blazor.webassembly.js"></script>
+    <script>
+        // Home page layered background
+        window.initHomeBackground = (defaultImage) => {
+            const a = document.getElementById('homeBgA');
+            const b = document.getElementById('homeBgB');
+            if (!a || !b) return;
+            a.style.backgroundImage = `url('${defaultImage}')`;
+            a.style.opacity = '1';
+            b.style.opacity = '0';
+        };
+
+        window.setHomeBackground = async (imageName) => {
+            const a = document.getElementById('homeBgA');
+            const b = document.getElementById('homeBgB');
+            if (!a || !b) return;
+
+            try { await window.preloadImage(imageName); } catch {}
+
+            const aVisible = parseFloat(getComputedStyle(a).opacity || '0') > 0.5;
+            const top = aVisible ? b : a;
+            const bottom = aVisible ? a : b;
+
+            const prevTopTransition = top.style.transition;
+            const prevBottomTransition = bottom.style.transition;
+            top.style.transition = 'none';
+            bottom.style.transition = 'none';
+
+            top.style.backgroundImage = `url('${imageName}')`;
+            top.style.opacity = '1';
+            bottom.style.opacity = '0';
+
+            setTimeout(() => {
+                top.style.transition = prevTopTransition;
+                bottom.style.transition = prevBottomTransition;
+            }, 0);
+        };
+
+        window.scrollThumbnailIntoView = (selectedIndex) => {
+            const thumbnailScroll = document.getElementById('thumbnailScroll');
+            if (!thumbnailScroll) return;
+
+            const thumbnails = thumbnailScroll.querySelectorAll('.thumbnail');
+            if (thumbnails.length <= selectedIndex) return;
+
+            const selectedThumbnail = thumbnails[selectedIndex];
+            if (selectedThumbnail) {
+                selectedThumbnail.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+            }
+        };
+
+        // Initialize double-layer background for crossfades
+        window.initGalleryBackground = (defaultImage) => {
+            const a = document.getElementById('galleryBgA');
+            const b = document.getElementById('galleryBgB');
+            if (!a || !b) return;
+            a.style.backgroundImage = `url('${defaultImage}')`;
+            a.style.opacity = '1';
+            b.style.opacity = '0';
+        };
+
+        // Crossfade the background image without flicker
+    window.setGalleryBackground = async (imageName) => {
+            const a = document.getElementById('galleryBgA');
+            const b = document.getElementById('galleryBgB');
+            if (!a || !b) return;
+
+            // Preload target first
+            try {
+                await window.preloadImage(imageName);
+            } catch {}
+
+            const aVisible = parseFloat(getComputedStyle(a).opacity || '0') > 0.5;
+            const top = aVisible ? b : a;
+            const bottom = aVisible ? a : b;
+
+            // Disable transitions for an instantaneous swap
+            const prevTopTransition = top.style.transition;
+            const prevBottomTransition = bottom.style.transition;
+            top.style.transition = 'none';
+            bottom.style.transition = 'none';
+
+            // Set next image on hidden layer and flip opacities instantly
+            top.style.backgroundImage = `url('${imageName}')`;
+            top.style.opacity = '1';
+            bottom.style.opacity = '0';
+
+            // Restore transitions (if any) after a tick
+            setTimeout(() => {
+                top.style.transition = prevTopTransition;
+                bottom.style.transition = prevBottomTransition;
+            }, 0);
+        };
+
+        window.preloadImage = (imageUrl) => {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = () => reject(new Error(`Failed to load image: ${imageUrl}`));
+                img.src = imageUrl;
+            });
+        };
+
+        window.preloadImages = (imageUrls) => {
+            if (!Array.isArray(imageUrls)) return Promise.resolve();
+            return Promise.allSettled(imageUrls.map(url => window.preloadImage(url)));
+        };
+    </script>
+</body>
+
+</html>
