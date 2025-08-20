@@ -24,6 +24,22 @@ jobs:
       - name: Publish (Release)
         run: dotnet publish -c Release
 
+      - name: Prepare Vercel Build Output (static)
+        shell: bash
+        run: |
+          mkdir -p .vercel/output/static
+          cp -R bin/Release/net9.0/publish/wwwroot/. .vercel/output/static
+          mkdir -p .vercel/output
+          cat > .vercel/output/config.json << 'EOF'
+          {
+            "version": 3,
+            "routes": [
+              { "src": "/(.*)\\.wasm", "headers": { "Content-Type": "application/wasm", "Cache-Control": "public, max-age=31536000, immutable" } },
+              { "src": "/(.*)", "dest": "/index.html" }
+            ]
+          }
+          EOF
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -39,9 +55,8 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
           vercel pull --yes --environment=production --token "$VERCEL_TOKEN"
-          vercel deploy bin/Release/net9.0/publish/wwwroot \
+          vercel deploy \
+            --prebuilt \
             --prod \
             --yes \
-            --token "$VERCEL_TOKEN" \
-            --local-config vercel.static.json \
-            --prebuilt
+            --token "$VERCEL_TOKEN"

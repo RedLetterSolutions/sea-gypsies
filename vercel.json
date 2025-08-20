@@ -1,9 +1,6 @@
 {
   "version": 2,
-  "framework": null,
-  "installCommand": "dotnet restore",
-  "buildCommand": "dotnet publish -c Release",
-  "outputDirectory": "bin/Release/net9.0/publish/wwwroot",
+  
   "headers": [
     {
       "source": "/(.*)\\.wasm",
