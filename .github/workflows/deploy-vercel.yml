@@ -43,4 +43,5 @@ jobs:
             --prod \
             --yes \
             --token "$VERCEL_TOKEN" \
-            --local-config vercel.static.json
+            --local-config vercel.static.json \
+            --prebuilt
