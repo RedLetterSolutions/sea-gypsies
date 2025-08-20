@@ -1,0 +1,161 @@
+@page "/library"
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Web
+
+<PageTitle>The Sea Gypsies - Library</PageTitle>
+
+<div class="viewport">
+  <div class="library-container">
+    <div class="library-background">
+      <div class="library-bg-layer" id="libraryBgA"></div>
+      <div class="library-bg-layer" id="libraryBgB"></div>
+    </div>
+
+    <!-- Hotspots -->
+    <div class="hotspot read-hotspot"
+         @onmouseenter="ShowReadHover"
+         @onmouseleave="ShowDefault"
+         @onclick="OpenScript"></div>
+
+    <div class="hotspot watch-hotspot"
+         @onmouseenter="ShowWatchHover"
+         @onmouseleave="ShowDefault"
+         @onclick="OpenVideo"></div>
+
+    <div class="hotspot home-hotspot"
+         @onmouseenter="ShowHomeHover"
+         @onmouseleave="ShowDefault"
+         @onclick="NavigateHome"></div>
+
+  @if (showScript || showVideo)
+    {
+      <div class="content-area">
+        <button class="content-close" @onclick="CloseContent">×</button>
+        @if (showScript)
+        {
+          <iframe class="content-pdf" src="library/viewer.html?file=@Uri.EscapeDataString(scriptUrl)" title="Script PDF"></iframe>
+      <div class="pdf-fallback"><a href="@scriptUrl" target="_blank" rel="noopener">Open PDF in new tab</a></div>
+        }
+        @if (showVideo)
+        {
+          <iframe class="content-iframe"
+                  src="https://www.youtube.com/embed/ScMzIvxBSi4"
+                  title="YouTube video player"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        }
+      </div>
+    }
+  </div>
+</div>
+
+<style>
+  html, body, #app {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background: #000; /* letterbox */
+    overflow: hidden;
+  }
+
+  .viewport {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+
+  .library-container {
+    position: relative;
+    width: min(100vw, calc(100vh * 16 / 9));
+    height: min(calc(100vw * 9 / 16), 100vh);
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+  }
+
+  .library-background { position: absolute; inset: 0; z-index: 1; }
+  .library-bg-layer {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0;
+    transition: none; /* instant swap */
+  }
+
+  .hotspot {
+    position: absolute;
+    cursor: pointer;
+    z-index: 10;
+  }
+  /* Left area – Read the Script */
+  .read-hotspot { left: 8%; top: 12%; width: 28%; height: 66%; }
+  /* Right area – Watch the Video */
+  .watch-hotspot { right: 8%; top: 12%; width: 28%; height: 66%; }
+  /* Home spot – align with Gallery page location */
+  .home-hotspot { left: 1.3%; top: 90.13%; width: 60px; height: 60px; }
+
+  /* Content area positioned for 1920x1080 stage: x:650 y:240 w:1180 h:676 */
+  .content-area {
+    position: absolute;
+    left: 33.854%; /* 650 / 1920 */
+    top: 22.222%;  /* 240 / 1080 */
+    width: 61.458%; /* 1180 / 1920 */
+    height: 62.593%; /* 676 / 1080 */
+    z-index: 20;
+    background: rgba(2, 15, 18, 0.82);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 8px;
+    color: #e7f6fb;
+    padding: 12px 12px 12px 12px;
+    box-sizing: border-box;
+    display: grid;
+  }
+  .content-close {
+    position: absolute; top: 6px; right: 8px; border: none; background: transparent; color: #fff; font-size: 26px; cursor: pointer; line-height: 1;
+  }
+  .placeholder { align-self: center; justify-self: center; text-align: center; padding: 8px 12px; }
+  .content-iframe { width: 100%; height: 100%; border: 0; border-radius: 4px; }
+  .content-pdf { width: 100%; height: 100%; border: 0; border-radius: 4px; background: #0a0f12; }
+  .pdf-fallback { position: absolute; bottom: 6px; right: 10px; font-size: 12px; opacity: 0.8; }
+</style>
+
+@code {
+  [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+  [Inject] private NavigationManager Navigation { get; set; } = default!;
+
+  private bool showScript = true;
+  private bool showVideo = false;
+  private string scriptUrl = "library/Placeholder-PDF.pdf";
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (firstRender)
+    {
+      try
+      {
+        await JSRuntime.InvokeVoidAsync("initLibraryBackground", "library/library_default.png");
+        var imgs = new[] {
+          "library/library_default.png",
+          "library/library_download_script.png",
+          "library/library_home.png"
+        };
+        await JSRuntime.InvokeVoidAsync("preloadImages", imgs);
+      }
+      catch { }
+    }
+  }
+
+  private async Task ShowReadHover() => await JSRuntime.InvokeVoidAsync("setLibraryBackground", "library/library_download_script.png");
+  private async Task ShowWatchHover() => await JSRuntime.InvokeVoidAsync("setLibraryBackground", "library/library_default.png");
+  private async Task ShowHomeHover() => await JSRuntime.InvokeVoidAsync("setLibraryBackground", "library/library_home.png");
+  private async Task ShowDefault() => await JSRuntime.InvokeVoidAsync("setLibraryBackground", "library/library_default.png");
+
+  private void OpenScript() { showVideo = false; showScript = true; }
+  private void OpenVideo() { showScript = false; showVideo = true; }
+  private void CloseContent() { showScript = false; showVideo = false; }
+
+  private void NavigateHome() => Navigation.NavigateTo("/");
+}

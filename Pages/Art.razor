@@ -2,6 +2,7 @@
 
 <PageTitle>The Sea Gypsies - Art Gallery</PageTitle>
 
+<div class="viewport">
 <div class="gallery-container">
     <div class="gallery-background">
         <div class="gallery-bg-layer" id="galleryBgA"></div>
@@ -51,20 +52,30 @@
         </div>
     </div>
 </div>
+</div>
 
 <style>
     html, body, #app {
         height: 100%;
         margin: 0;
         padding: 0;
-        background: #000;
+        background: #000; /* letterbox color */
         overflow: hidden;
+    }
+
+    .viewport {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     }
 
     .gallery-container {
         position: relative;
-        width: 100vw;
-        height: 100vh;
+        width: min(100vw, calc(100vh * 16 / 9));
+        height: min(calc(100vw * 9 / 16), 100vh);
+        aspect-ratio: 16 / 9;
         overflow: hidden;
     }
 

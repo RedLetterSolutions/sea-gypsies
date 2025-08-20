@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PDF Viewer</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: transparent;
+      color-scheme: dark;
+    }
+    /* Container fills iframe and hides scrollbars visually */
+    #viewer {
+      position: fixed;
+      inset: 0;
+      overflow: auto;
+      -ms-overflow-style: none; /* IE/Edge */
+      scrollbar-width: none; /* Firefox */
+      background: transparent;
+    }
+    #viewer::-webkit-scrollbar { width: 0; height: 0; }
+
+    .pageCanvas {
+      display: block;
+      margin: 0 auto 8px auto;
+      background: #0a0f12;
+      border-radius: 4px;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.08) inset;
+    }
+  </style>
+  <!-- Load pdf.js from CDN; swap to self-hosted if you prefer offline -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.5.136/pdf.min.js" integrity="sha512-M0DpDYlV9+ZuhbU3oJlF4w0A9jCKCkYyN4+eZyE4gR35yAlYZ9Q2f8D8u61iJTaNvh5ClZcJZpZ9JwY7nHTthg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script>
+    // Configure worker from CDN as well
+    if (window['pdfjsLib']) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.5.136/pdf.worker.min.js';
+    }
+
+    const qs = new URLSearchParams(location.search);
+    const fileUrl = qs.get('file') || '';
+
+    async function render() {
+      if (!fileUrl || !window['pdfjsLib']) return;
+      const container = document.getElementById('viewer');
+      container.innerHTML = '';
+
+      const pdf = await pdfjsLib.getDocument(fileUrl).promise;
+      const viewportWidth = container.clientWidth;
+
+      for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+        const page = await pdf.getPage(pageNum);
+        const unscaled = page.getViewport({ scale: 1 });
+        const scale = viewportWidth / unscaled.width; // fit width
+        const viewport = page.getViewport({ scale });
+
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.floor(viewport.width);
+        canvas.height = Math.floor(viewport.height);
+        canvas.className = 'pageCanvas';
+        const ctx = canvas.getContext('2d');
+
+        await page.render({ canvasContext: ctx, viewport }).promise;
+        container.appendChild(canvas);
+      }
+    }
+
+    window.addEventListener('load', () => {
+      render();
+      let resizeTimer;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(render, 150);
+      });
+    });
+  </script>
+</head>
+<body>
+  <div id="viewer"></div>
+</body>
+</html>

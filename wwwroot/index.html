@@ -140,6 +140,37 @@
             if (!Array.isArray(imageUrls)) return Promise.resolve();
             return Promise.allSettled(imageUrls.map(url => window.preloadImage(url)));
         };
+
+        // Library page layered background
+        window.initLibraryBackground = (defaultImage) => {
+            const a = document.getElementById('libraryBgA');
+            const b = document.getElementById('libraryBgB');
+            if (!a || !b) return;
+            a.style.backgroundImage = `url('${defaultImage}')`;
+            a.style.opacity = '1';
+            b.style.opacity = '0';
+        };
+
+        window.setLibraryBackground = async (imageName) => {
+            const a = document.getElementById('libraryBgA');
+            const b = document.getElementById('libraryBgB');
+            if (!a || !b) return;
+            try { await window.preloadImage(imageName); } catch {}
+            const aVisible = parseFloat(getComputedStyle(a).opacity || '0') > 0.5;
+            const top = aVisible ? b : a;
+            const bottom = aVisible ? a : b;
+            const prevTopTransition = top.style.transition;
+            const prevBottomTransition = bottom.style.transition;
+            top.style.transition = 'none';
+            bottom.style.transition = 'none';
+            top.style.backgroundImage = `url('${imageName}')`;
+            top.style.opacity = '1';
+            bottom.style.opacity = '0';
+            setTimeout(() => {
+                top.style.transition = prevTopTransition;
+                bottom.style.transition = prevBottomTransition;
+            }, 0);
+        };
     </script>
 </body>
 

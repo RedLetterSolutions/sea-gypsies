@@ -2,6 +2,7 @@
 
 <PageTitle>The Sea Gypsies</PageTitle>
 
+<div class="viewport">
 <div class="home-container">
     <div class="home-background">
         <div class="home-bg-layer" id="homeBgA"></div>
@@ -19,6 +20,7 @@
          @onmouseleave="ShowDefault"
          @onclick="NavigateToGallery"></div>
 </div>
+</div>
 
 <style>
     html, body, #app { 
@@ -29,10 +31,19 @@
         overflow: hidden;
     }
 
+    .viewport {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+
     .home-container {
         position: relative;
-        width: 100vw;
-        height: 100vh;
+        width: min(100vw, calc(100vh * 16 / 9));
+        height: min(calc(100vw * 9 / 16), 100vh);
+        aspect-ratio: 16 / 9;
         overflow: hidden;
     }
 
@@ -60,20 +71,19 @@
         z-index: 10;
     }
 
-    /* Left panel - "READ THE SCRIPT" / "ENTER THE LIBRARY" button area */
+    /* Precise button rectangles on 1920x1080 stage */
     .library-hotspot {
-        left: 8%;
-        top: 12%;
-        width: 28%;
-        height: 66%;
+        left: 13.28125%;   /* 255 / 1920 */
+        top: 27.12963%;    /* 293 / 1080 */
+        width: 12.08333%;  /* 232 / 1920 */
+        height: 17.12963%; /* 185 / 1080 */
     }
 
-    /* Right panel - "SEE THE ART" / "ENTER THE GALLERY" button area */
     .gallery-hotspot {
-        right: 8%;
-        top: 12%;
-        width: 28%;
-        height: 66%;
+        left: 76.30208%;   /* 1467 / 1920 */
+        top: 27.12963%;    /* 293 / 1080 */
+        width: 12.08333%;  /* 232 / 1920 */
+        height: 17.12963%; /* 185 / 1080 */
     }
 
     /* For debugging - uncomment to see hotspot areas */
@@ -119,7 +129,7 @@
 
     private void NavigateToLibrary()
     {
-        Navigation.NavigateTo("/script");
+        Navigation.NavigateTo("/library");
     }
 
     private void NavigateToGallery()
