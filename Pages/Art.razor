@@ -156,10 +156,13 @@
         box-sizing: border-box;
     }
 
+    /* Thumbnails slightly reduced (85%) and centered within scroll column */
     .thumbnail {
-        width: 100%;
+        --thumb-scale: 0.85; /* adjust here to fine-tune size */
+        --thumb-gap: 22px; /* vertical separation */
+        width: calc(100% * var(--thumb-scale));
         aspect-ratio: 1;
-        margin-bottom: 15px;
+        margin: 0 auto var(--thumb-gap) auto; /* increased spacing */
         cursor: pointer;
         border: 3px solid transparent;
         border-radius: 8px;
@@ -222,8 +225,8 @@
     }
 
     .thumbnail-overlay img {
-        width: 24px;
-        height: 24px;
+        width: 36px; /* enlarged from 24px */
+        height: 36px; /* enlarged from 24px */
         object-fit: contain;
     }
 
