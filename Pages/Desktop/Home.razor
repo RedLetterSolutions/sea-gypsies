@@ -1,0 +1,140 @@
+﻿@page "/desktop"
+@rendermode InteractiveServer
+
+<PageTitle>The Sea Gypsies</PageTitle>
+
+<div class="viewport">
+<div class="home-container">
+    <div class="home-background">
+        <div class="home-bg-layer" id="homeBgA"></div>
+        <div class="home-bg-layer" id="homeBgB"></div>
+    </div>
+    
+    <!-- Invisible hotspots for hover areas -->
+    <div class="hotspot library-hotspot" 
+         @onmouseenter="ShowLibraryHover" 
+         @onmouseleave="ShowDefault"
+         @onclick="NavigateToLibrary"></div>
+    
+    <div class="hotspot gallery-hotspot" 
+         @onmouseenter="ShowGalleryHover" 
+         @onmouseleave="ShowDefault"
+         @onclick="NavigateToGallery"></div>
+</div>
+</div>
+
+<style>
+    html, body, #app { 
+        height: 100%; 
+        margin: 0; 
+        padding: 0;
+        background: #000; 
+        overflow: hidden;
+    }
+
+    .viewport {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+
+    .home-container {
+        position: relative;
+        width: min(100vw, calc(100vh * 16 / 9));
+        height: min(calc(100vw * 9 / 16), 100vh);
+        aspect-ratio: 16 / 9;
+        overflow: hidden;
+    }
+
+    .home-background {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    .home-bg-layer {
+        position: absolute;
+        inset: 0;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        opacity: 0;
+        transition: none; /* instant swap */
+    }
+
+    .hotspot {
+        position: absolute;
+        cursor: pointer;
+        z-index: 10;
+    }
+
+    /* Precise button rectangles on 1920x1080 stage */
+    .library-hotspot {
+        left: 13.28125%;   /* 255 / 1920 */
+        top: 27.12963%;    /* 293 / 1080 */
+        width: 12.08333%;  /* 232 / 1920 */
+        height: 17.12963%; /* 185 / 1080 */
+    }
+
+    .gallery-hotspot {
+        left: 76.30208%;   /* 1467 / 1920 */
+        top: 27.12963%;    /* 293 / 1080 */
+        width: 12.08333%;  /* 232 / 1920 */
+        height: 17.12963%; /* 185 / 1080 */
+    }
+
+    /* For debugging - uncomment to see hotspot areas */
+    /*
+    .hotspot {
+        border: 2px solid rgba(255, 0, 0, 0.5);
+    }
+    */
+</style>
+
+@code {
+    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("initHomeBackground", "home_default.png");
+                var images = new[] { "home_default.png", "read_the_script_hover.png", "see_the_art_hover.png" };
+                await JSRuntime.InvokeVoidAsync("preloadImages", images);
+            }
+            catch { }
+        }
+    }
+
+    private async Task ShowLibraryHover()
+    {
+        await JSRuntime.InvokeVoidAsync("setHomeBackground", "read_the_script_hover.png");
+    }
+
+    private async Task ShowGalleryHover()
+    {
+        await JSRuntime.InvokeVoidAsync("setHomeBackground", "see_the_art_hover.png");
+    }
+
+    private async Task ShowDefault()
+    {
+        await JSRuntime.InvokeVoidAsync("setHomeBackground", "home_default.png");
+    }
+
+    private async Task NavigateToLibrary()
+    {
+        await JSRuntime.InvokeVoidAsync("navigateWithTransition", "/desktop/library", "left");
+    }
+
+    private async Task NavigateToGallery()
+    {
+        await JSRuntime.InvokeVoidAsync("navigateWithTransition", "/desktop/art", "right");
+    }
+}

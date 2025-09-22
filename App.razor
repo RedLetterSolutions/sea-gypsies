@@ -1,45 +1,300 @@
-﻿<div class="device-banner" id="deviceBanner">for best experience view on a desktop device</div>
+﻿<!DOCTYPE html>
+<html lang="en">
 
-<Router AppAssembly="@typeof(App).Assembly">
-    <Found Context="routeData">
-        <RouteView RouteData="@routeData" />
-    </Found>
-    <NotFound>
-        <PageTitle>The Sea Gypsies</PageTitle>
-        <div class="home-container">
-            
-        </div>
-    </NotFound>
-</Router>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/" />
+    <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="css/app.css" />
+    <link rel="icon" type="image/png" href="gallery/favicon/favicon.png" />
+    <link href="SeaGypsies.styles.css" rel="stylesheet" />
+    <HeadOutlet />
+    <style>
+        /* Loading screen color before Blazor mounts */
+        html, body, #app {
+            height: 100%;
+            margin: 0;
+        }
+        #app {
+            background: #256878;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="page-container">
+        <Router AppAssembly="@typeof(App).Assembly">
+            <Found Context="routeData">
+                <div class="page-wrapper">
+                    <RouteView RouteData="@routeData" DefaultLayout="@typeof(BackgroundOnlyLayout)" />
+                    <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+                </div>
+            </Found>
+            <NotFound>
+                <PageTitle>The Sea Gypsies</PageTitle>
+                <div class="home-container">
+
+                </div>
+            </NotFound>
+        </Router>
+    </div>
+
+    <div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="." class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+
+    <script src="_framework/blazor.server.js"></script>
+    <script>
+        // Home page layered background
+        window.initHomeBackground = (defaultImage) => {
+            const a = document.getElementById('homeBgA');
+            const b = document.getElementById('homeBgB');
+            if (!a || !b) return;
+            a.style.backgroundImage = `url('${defaultImage}')`;
+            a.style.opacity = '1';
+            b.style.opacity = '0';
+        };
+
+        window.setHomeBackground = async (imageName) => {
+            const a = document.getElementById('homeBgA');
+            const b = document.getElementById('homeBgB');
+            if (!a || !b) return;
+
+            try { await window.preloadImage(imageName); } catch {}
+
+            const aVisible = parseFloat(getComputedStyle(a).opacity || '0') > 0.5;
+            const top = aVisible ? b : a;
+            const bottom = aVisible ? a : b;
+
+            const prevTopTransition = top.style.transition;
+            const prevBottomTransition = bottom.style.transition;
+            top.style.transition = 'none';
+            bottom.style.transition = 'none';
+
+            top.style.backgroundImage = `url('${imageName}')`;
+            top.style.opacity = '1';
+            bottom.style.opacity = '0';
+
+            setTimeout(() => {
+                top.style.transition = prevTopTransition;
+                bottom.style.transition = prevBottomTransition;
+            }, 0);
+        };
+
+        window.scrollThumbnailIntoView = (selectedIndex) => {
+            const thumbnailScroll = document.getElementById('thumbnailScroll');
+            if (!thumbnailScroll) return;
+
+            const thumbnails = thumbnailScroll.querySelectorAll('.thumbnail');
+            if (thumbnails.length <= selectedIndex) return;
+
+            const selectedThumbnail = thumbnails[selectedIndex];
+            if (selectedThumbnail) {
+                selectedThumbnail.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+            }
+        };
+
+        // Initialize double-layer background for crossfades
+        window.initGalleryBackground = (defaultImage) => {
+            const a = document.getElementById('galleryBgA');
+            const b = document.getElementById('galleryBgB');
+            if (!a || !b) return;
+            a.style.backgroundImage = `url('${defaultImage}')`;
+            a.style.opacity = '1';
+            b.style.opacity = '0';
+        };
+
+        // Crossfade the background image without flicker
+    window.setGalleryBackground = async (imageName) => {
+            const a = document.getElementById('galleryBgA');
+            const b = document.getElementById('galleryBgB');
+            if (!a || !b) return;
+
+            // Preload target first
+            try {
+                await window.preloadImage(imageName);
+            } catch {}
+
+            const aVisible = parseFloat(getComputedStyle(a).opacity || '0') > 0.5;
+            const top = aVisible ? b : a;
+            const bottom = aVisible ? a : b;
+
+            // Disable transitions for an instantaneous swap
+            const prevTopTransition = top.style.transition;
+            const prevBottomTransition = bottom.style.transition;
+            top.style.transition = 'none';
+            bottom.style.transition = 'none';
+
+            // Set next image on hidden layer and flip opacities instantly
+            top.style.backgroundImage = `url('${imageName}')`;
+            top.style.opacity = '1';
+            bottom.style.opacity = '0';
+
+            // Restore transitions (if any) after a tick
+            setTimeout(() => {
+                top.style.transition = prevTopTransition;
+                bottom.style.transition = prevBottomTransition;
+            }, 0);
+        };
+
+        window.preloadImage = (imageUrl) => {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = () => reject(new Error(`Failed to load image: ${imageUrl}`));
+                img.src = imageUrl;
+            });
+        };
+
+        window.preloadImages = (imageUrls) => {
+            if (!Array.isArray(imageUrls)) return Promise.resolve();
+            return Promise.allSettled(imageUrls.map(url => window.preloadImage(url)));
+        };
+
+        // Library page layered background
+        window.initLibraryBackground = (defaultImage) => {
+            const a = document.getElementById('libraryBgA');
+            const b = document.getElementById('libraryBgB');
+            if (!a || !b) return;
+            a.style.backgroundImage = `url('${defaultImage}')`;
+            a.style.opacity = '1';
+            b.style.opacity = '0';
+        };
+
+        window.setLibraryBackground = async (imageName) => {
+            const a = document.getElementById('libraryBgA');
+            const b = document.getElementById('libraryBgB');
+            if (!a || !b) return;
+            try { await window.preloadImage(imageName); } catch {}
+            const aVisible = parseFloat(getComputedStyle(a).opacity || '0') > 0.5;
+            const top = aVisible ? b : a;
+            const bottom = aVisible ? a : b;
+            const prevTopTransition = top.style.transition;
+            const prevBottomTransition = bottom.style.transition;
+            top.style.transition = 'none';
+            bottom.style.transition = 'none';
+            top.style.backgroundImage = `url('${imageName}')`;
+            top.style.opacity = '1';
+            bottom.style.opacity = '0';
+            setTimeout(() => {
+                top.style.transition = prevTopTransition;
+                bottom.style.transition = prevBottomTransition;
+            }, 0);
+        };
+    </script>
+
+</body>
+
+</html>
 
 <style>
-    .device-banner {
+
+    .page-container {
         position: fixed;
-        top: 0; left: 0; right: 0;
-        background: rgba(0,0,0,0.85);
-        color: #fff;
-        font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-        font-size: 14px;
-        letter-spacing: .5px;
-        text-align: center;
-        padding: 10px 12px;
-        z-index: 10000;
-        display: none; /* hidden by default (desktop) */
+        inset: 0;
+        overflow: hidden;
     }
 
-        /* Only shown via JS when mobile is detected (no width-based media query) */
+    .page-wrapper {
+        position: absolute;
+        inset: 0;
+        transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        transform: translateX(0);
+    }
+
+    .page-wrapper.slide-left-enter {
+        transform: translateX(-100%);
+    }
+
+    .page-wrapper.slide-left-enter-active {
+        transform: translateX(0);
+    }
+
+    .page-wrapper.slide-right-enter {
+        transform: translateX(100%);
+    }
+
+    .page-wrapper.slide-right-enter-active {
+        transform: translateX(0);
+    }
+
+    .page-wrapper.slide-left-exit {
+        transform: translateX(0);
+    }
+
+    .page-wrapper.slide-left-exit-active {
+        transform: translateX(100%);
+    }
+
+    .page-wrapper.slide-right-exit {
+        transform: translateX(0);
+    }
+
+    .page-wrapper.slide-right-exit-active {
+        transform: translateX(-100%);
+    }
 </style>
 
 <script>
-        (function(){
-            const banner = document.getElementById('deviceBanner');
-            if(!banner) return;
-            const ua = navigator.userAgent || navigator.vendor || '';
-            const isCoarse = matchMedia('(pointer:coarse)').matches || 'ontouchstart' in window || navigator.maxTouchPoints > 1;
-            const isMobileUA = /Android|iPhone|iPad|iPod|Mobile|IEMobile|Opera Mini/i.test(ua);
-            const isMobile = isMobileUA || (isCoarse && window.innerWidth <= 1100);
-            if (isMobile) {
-                banner.style.display = 'block';
+
+        window.navigateWithTransition = function(url, direction) {
+            if (direction) {
+                sessionStorage.setItem('pageTransition', direction);
             }
-        })();
+            window.location.href = url;
+        };
+
+        window.applyPageTransition = function() {
+            const direction = sessionStorage.getItem('pageTransition');
+            if (direction) {
+                sessionStorage.removeItem('pageTransition');
+                const pageWrapper = document.querySelector('.page-wrapper');
+                if (pageWrapper) {
+                    // Start with the page off-screen
+                    pageWrapper.style.transform = direction === 'left' ? 'translateX(-100%)' : 'translateX(100%)';
+                    pageWrapper.style.transition = 'none';
+                    
+                    // Force a reflow then animate in
+                    pageWrapper.offsetHeight;
+                    
+                    requestAnimationFrame(() => {
+                        pageWrapper.style.transition = 'transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                        pageWrapper.style.transform = 'translateX(0)';
+                    });
+                }
+            }
+        };
+
+        // Apply transition when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            window.applyPageTransition();
+        });
+
 </script>
+
+@using Microsoft.JSInterop
+@inject IJSRuntime JSRuntime
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("applyPageTransition");
+            }
+            catch
+            {
+                // Ignore JS interop errors
+            }
+        }
+    }
+}

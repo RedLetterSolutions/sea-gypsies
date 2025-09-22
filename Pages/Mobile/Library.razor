@@ -1,0 +1,854 @@
+@page "/mobile/library"
+@rendermode InteractiveServer
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Web
+
+<PageTitle>The Sea Gypsies - Library</PageTitle>
+
+<div class="viewport">
+  <div class="library-container">
+
+    <!-- Mobile Navigation Menu -->
+    <div class="nav-menu @(isMenuOpen ? "open" : "")">
+        <div class="nav-overlay" @onclick="CloseMenu"></div>
+        <div class="nav-content">
+            <div class="nav-header">
+                <h2>The Sea Gypsies</h2>
+                <button class="nav-close" @onclick="CloseMenu">×</button>
+            </div>
+            <nav class="nav-links">
+                <a href="/mobile" class="nav-link" @onclick="CloseMenu">
+                    HOME
+                </a>
+                <a href="/mobile/library" class="nav-link active" @onclick="CloseMenu">
+                    LIBRARY
+                </a>
+                <a href="/mobile/art" class="nav-link" @onclick="CloseMenu">
+                    ART GALLERY
+                </a>
+            </nav>
+        </div>
+    </div>
+
+    <div class="library-background">
+      <div class="library-bg-layer" id="libraryBgA"></div>
+      <div class="library-bg-layer" id="libraryBgB"></div>
+    </div>
+
+    <!-- Mobile Library Action Buttons - Only show when no content is active -->
+    @if (!showScript && !showVideo)
+    {
+      <div class="library-content">
+        <div class="library-logo">
+          <img src="logo.png" alt="The Sea Gypsies" class="logo-image" />
+        </div>
+
+        <div class="library-actions">
+          <button class="action-btn read-btn image-btn" @onclick="OpenScript">
+            <img src="library/mobile/read_the_script.png" alt="Read the Script" class="btn-image" />
+          </button>
+
+          <button class="action-btn download-btn image-btn" @onclick="ShowDownloadForm">
+            <img src="library/mobile/download_the_script_button.png" alt="Download the Script" class="btn-image" />
+          </button>
+
+          <button class="action-btn watch-btn image-btn" @onclick="OpenVideo">
+            <img src="library/mobile/watch_the_video.png" alt="Watch the Video" class="btn-image" />
+          </button>
+        </div>
+      </div>
+    }
+
+  <!-- Mobile Video Modal -->
+  @if (showVideo)
+  {
+    <div class="modal-overlay" @onclick="CloseContent">
+      <div class="modal-content video-modal" @onclick:stopPropagation="true">
+        <button class="modal-close" @onclick="CloseContent">×</button>
+        <video class="modal-video" controls autoplay>
+          <source src="library/TSG_Trailer_V3.mp4" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+      </div>
+    </div>
+  }
+
+  <!-- Mobile Script Modal -->
+  @if (showScript)
+  {
+    <div class="modal-overlay" @onclick="CloseContent">
+      <div class="modal-content script-modal" @onclick:stopPropagation="true">
+        <button class="modal-close" @onclick="CloseContent">×</button>
+        <div class="modal-header">
+          <h3>The Sea Gypsies Script</h3>
+          <button class="download-script-btn" @onclick="ShowDownloadForm">Download Script</button>
+        </div>
+        <iframe class="modal-pdf" src="@scriptUrl#toolbar=0&navpanes=0&scrollbar=0" title="Script PDF"></iframe>
+        <div class="pdf-fallback"><a href="@scriptUrl" target="_blank" rel="noopener">Open PDF in new tab</a></div>
+      </div>
+    </div>
+  }
+
+  @if (showDownloadForm)
+    {
+      <div class="download-form-overlay" @onclick="HideDownloadForm">
+        <div class="download-form-container" @onclick:stopPropagation="true">
+          <h2>Download The Script</h2>
+          <p>Enter your information to receive the script via email:</p>
+
+          <form @onsubmit="SubmitDownloadForm" @onsubmit:preventDefault="true">
+            <div class="form-group">
+              <label for="firstName">First Name (Optional)</label>
+              <input type="text" id="firstName" @bind="downloadForm.FirstName" placeholder="Enter first name" />
+            </div>
+
+            <div class="form-group">
+              <label for="lastName">Last Name (Optional)</label>
+              <input type="text" id="lastName" @bind="downloadForm.LastName" placeholder="Enter last name" />
+            </div>
+
+            <div class="form-group">
+              <label for="email">Email Address *</label>
+              <input type="email" id="email" @bind="downloadForm.Email" placeholder="Enter email address" required />
+              @if (!string.IsNullOrEmpty(emailError))
+              {
+                <div class="error-message">@emailError</div>
+              }
+            </div>
+
+            <div class="form-buttons">
+              <button type="button" class="btn-cancel" @onclick="HideDownloadForm">Cancel</button>
+              <button type="submit" class="btn-submit" disabled="@isSubmitting">
+                @if (isSubmitting)
+                {
+                  <span>Sending...</span>
+                }
+                else
+                {
+                  <span>Send Script</span>
+                }
+              </button>
+            </div>
+          </form>
+
+          <button class="form-close" @onclick="HideDownloadForm">×</button>
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+<style>
+  html, body, #app {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background: #000;
+    overflow: hidden;
+    position: fixed; /* Prevent any scrolling behavior */
+    width: 100%;
+  }
+
+  .viewport {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    padding-top: 60px; /* Space for global navbar */
+    background: #000; /* Ensure black background for any overflow areas */
+  }
+
+  .library-container {
+    position: relative;
+    width: 100vw;
+    height: calc(100vh - 60px);
+    overflow: hidden;
+    background: #000; /* Fallback background */
+  }
+
+  .library-background {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: #000; /* Ensure consistent background */
+  }
+  .library-bg-layer {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0;
+    transition: none;
+  }
+
+  .hotspot {
+    position: absolute;
+    cursor: pointer;
+    z-index: 10;
+  }
+
+  /* Mobile Library Content Container */
+  .library-content {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    z-index: 25;
+    width: 90%;
+    max-width: 320px;
+  }
+
+  /* Logo styling */
+  .library-logo {
+    text-align: center;
+  }
+
+  .logo-image {
+    width: 100%;
+    max-width: 280px;
+    height: auto;
+    opacity: 0.9;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+  }
+
+  /* Mobile Library Action Buttons */
+  .library-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+  }
+
+  .action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 16px 24px;
+    background: rgba(2, 15, 18, 0.85);
+    border: 2px solid rgba(14, 165, 233, 0.6);
+    border-radius: 12px;
+    color: #e7f6fb;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  }
+
+  .action-btn:hover, .action-btn:active {
+    background: rgba(14, 165, 233, 0.2);
+    border-color: rgba(14, 165, 233, 0.8);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(14, 165, 233, 0.2);
+  }
+
+  .btn-icon {
+    font-size: 20px;
+  }
+
+  .btn-text {
+    flex: 1;
+    text-align: center;
+  }
+
+  /* Different colors for each button */
+  .read-btn {
+    border-color: rgba(34, 197, 94, 0.6);
+  }
+
+  .read-btn:hover, .read-btn:active {
+    background: rgba(34, 197, 94, 0.2);
+    border-color: rgba(34, 197, 94, 0.8);
+    box-shadow: 0 6px 20px rgba(34, 197, 94, 0.2);
+  }
+
+  .download-btn {
+    border-color: rgba(245, 158, 11, 0.6);
+  }
+
+  .download-btn:hover, .download-btn:active {
+    background: rgba(245, 158, 11, 0.2);
+    border-color: rgba(245, 158, 11, 0.8);
+    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.2);
+  }
+
+  .watch-btn {
+    border-color: rgba(239, 68, 68, 0.6);
+  }
+
+  .watch-btn:hover, .watch-btn:active {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.8);
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.2);
+  }
+
+  /* Image button styling */
+  .image-btn {
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .image-btn:hover, .image-btn:active {
+    background: transparent;
+    border: none;
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  }
+
+  .btn-image {
+    width: 100%;
+    height: auto;
+    max-width: 320px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    display: block;
+    margin: 0 auto;
+  }
+
+  /* Mobile Modal Styles */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10001; /* Higher than navbar (10000) */
+    backdrop-filter: blur(4px);
+    padding: 80px 20px 20px 20px; /* Top padding to clear navbar */
+  }
+
+  .modal-content {
+    position: relative;
+    width: 95%;
+    max-width: 800px;
+    height: 85vh;
+    max-height: 600px;
+    display: flex;
+    flex-direction: column;
+    background: rgba(2, 15, 18, 0.9);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+  }
+
+  .modal-close {
+    position: absolute;
+    top: -50px;
+    right: 10px;
+    background: rgba(239, 68, 68, 0.9);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: #fff;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  }
+
+  .modal-close:hover {
+    background: rgba(239, 68, 68, 1);
+    transform: scale(1.1);
+    border-color: rgba(255, 255, 255, 0.5);
+  }
+
+  /* Video Modal */
+  .video-modal {
+    background: #000;
+  }
+
+  .modal-video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 12px;
+  }
+
+  /* Script Modal */
+  .script-modal {
+    background: rgba(2, 15, 18, 0.95);
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 0 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .modal-header h3 {
+    color: #e7f6fb;
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .modal-pdf {
+    flex: 1;
+    width: 100%;
+    border: 0;
+    border-radius: 8px;
+    background: #0a0f12;
+    min-height: 0;
+  }
+  .pdf-fallback { position: absolute; bottom: 6px; right: 10px; font-size: 10px; opacity: 0.8; }
+
+  .download-script-btn {
+    background: rgba(14, 165, 233, 0.9);
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .download-script-btn:hover {
+    background: rgba(14, 165, 233, 1);
+    transform: translateY(-1px);
+  }
+
+  .download-form-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+  }
+
+  .download-form-container {
+    background: rgba(2, 15, 18, 0.95);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+    position: relative;
+    color: #e7f6fb;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .download-form-container h2 {
+    color: #fff;
+    margin: 0 0 8px 0;
+    font-size: 20px;
+    font-weight: 600;
+  }
+
+  .download-form-container p {
+    color: rgba(231, 246, 251, 0.8);
+    margin: 0 0 20px 0;
+    font-size: 12px;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #e7f6fb;
+  }
+
+  .form-group input {
+    width: 100%;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    color: #fff;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+  }
+
+  .form-group input:focus {
+    outline: none;
+    border-color: rgba(14, 165, 233, 0.6);
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+  }
+
+  .form-group input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .error-message {
+    color: #ef4444;
+    font-size: 10px;
+    margin-top: 4px;
+  }
+
+  .form-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 24px;
+  }
+
+  .btn-cancel {
+    padding: 10px 16px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+    color: #e7f6fb;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s ease;
+  }
+
+  .btn-cancel:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+
+  .btn-submit {
+    padding: 10px 16px;
+    background: rgba(14, 165, 233, 0.9);
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    min-width: 100px;
+  }
+
+  .btn-submit:hover:not(:disabled) {
+    background: rgba(14, 165, 233, 1);
+    transform: translateY(-1px);
+  }
+
+  .btn-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .form-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 20px;
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+  }
+
+  .form-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+  }
+
+
+
+  /* Navigation Menu */
+  .nav-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 999;
+    pointer-events: none;
+    transition: all 0.3s ease;
+  }
+
+  .nav-menu.open {
+    pointer-events: all;
+  }
+
+  .nav-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    backdrop-filter: blur(4px);
+  }
+
+  .nav-menu.open .nav-overlay {
+    opacity: 1;
+  }
+
+  .nav-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 280px;
+    height: 100%;
+    background: linear-gradient(180deg, rgba(2, 15, 18, 0.95) 0%, rgba(12, 35, 41, 0.95) 100%);
+    border-right: 2px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+  }
+
+  .nav-menu.open .nav-content {
+    transform: translateX(0);
+  }
+
+  .nav-header {
+    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .nav-header h2 {
+    color: #e7f6fb;
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .nav-close {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 24px;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+  }
+
+  .nav-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+  }
+
+  .nav-links {
+    padding: 20px 0;
+  }
+
+  .nav-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 20px;
+    color: #67f6ff;
+    text-decoration: none;
+    font-family: 'Apotek Comp', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+  }
+
+  .nav-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #e7f6fb;
+    border-left-color: rgba(14, 165, 233, 0.6);
+  }
+
+  .nav-link.active {
+    background: rgba(14, 165, 233, 0.2);
+    color: #fff;
+    border-left-color: #0ea5e9;
+  }
+
+  /* For debugging - uncomment to see hotspot areas */
+  /*
+  .hotspot {
+    border: 2px solid rgba(255, 255, 0, 0.8) !important;
+    background: rgba(255, 255, 0, 0.3) !important;
+  }
+  */
+</style>
+
+@code {
+  [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+  [Inject] private NavigationManager Navigation { get; set; } = default!;
+
+  private bool showScript = false;
+  private bool showVideo = false;
+  private bool showDownloadForm = false;
+  private bool isSubmitting = false;
+  private bool isMenuOpen = false;
+  private string scriptUrl = "library/SEA GYPSIES COMPLETE SCRIPT MASTER.pdf";
+  private string emailError = "";
+
+  private DownloadFormModel downloadForm = new DownloadFormModel();
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (firstRender)
+    {
+      try
+      {
+        await JSRuntime.InvokeVoidAsync("initLibraryBackground", "gallery/backgrounds/mobile_background.jpg");
+        var imgs = new[] {
+          "gallery/backgrounds/mobile_background.jpg",
+          "library/library_download_script.png",
+          "library/library_home.png"
+        };
+        await JSRuntime.InvokeVoidAsync("preloadImages", imgs);
+
+        // Connect to global navbar menu toggle
+        await JSRuntime.InvokeVoidAsync("addMobileMenuListener", DotNetObjectReference.Create(this));
+      }
+      catch { }
+    }
+  }
+
+
+  private void OpenScript() { showVideo = false; showScript = true; }
+  private void OpenVideo() { showScript = false; showVideo = true; }
+  private void CloseContent() { showScript = false; showVideo = false; }
+
+  private void ShowDownloadForm()
+  {
+    showDownloadForm = true;
+    emailError = "";
+    downloadForm = new DownloadFormModel();
+  }
+
+  private void HideDownloadForm()
+  {
+    showDownloadForm = false;
+    emailError = "";
+    isSubmitting = false;
+  }
+
+  private async Task SubmitDownloadForm()
+  {
+    emailError = "";
+
+    if (string.IsNullOrWhiteSpace(downloadForm.Email))
+    {
+      emailError = "Email address is required.";
+      return;
+    }
+
+    if (!IsValidEmail(downloadForm.Email))
+    {
+      emailError = "Please enter a valid email address.";
+      return;
+    }
+
+    isSubmitting = true;
+    StateHasChanged();
+
+    try
+    {
+      await SimulateEmailSending();
+      HideDownloadForm();
+      await ShowSuccessMessage();
+    }
+    catch
+    {
+      emailError = "An error occurred while sending the script. Please try again.";
+    }
+    finally
+    {
+      isSubmitting = false;
+      StateHasChanged();
+    }
+  }
+
+  private async Task SimulateEmailSending()
+  {
+    await Task.Delay(2000);
+  }
+
+  private async Task ShowSuccessMessage()
+  {
+    try
+    {
+      await JSRuntime.InvokeVoidAsync("alert", "Script sent successfully! Please check your email.");
+    }
+    catch
+    {
+      // Fallback if JS alert fails
+    }
+  }
+
+  private bool IsValidEmail(string email)
+  {
+    try
+    {
+      var addr = new System.Net.Mail.MailAddress(email);
+      return addr.Address == email;
+    }
+    catch
+    {
+      return false;
+    }
+  }
+
+  private async Task NavigateHome() => await JSRuntime.InvokeVoidAsync("navigateWithTransition", "/mobile", "right");
+
+  private void ToggleMenu()
+  {
+    isMenuOpen = !isMenuOpen;
+  }
+
+  [JSInvokable]
+  public void ToggleMenuFromJS()
+  {
+    ToggleMenu();
+    StateHasChanged();
+  }
+
+  private void CloseMenu()
+  {
+    isMenuOpen = false;
+  }
+
+  public class DownloadFormModel
+  {
+    public string FirstName { get; set; } = "";
+    public string LastName { get; set; } = "";
+    public string Email { get; set; } = "";
+  }
+}

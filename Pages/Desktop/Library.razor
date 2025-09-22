@@ -1,0 +1,540 @@
+@page "/desktop/library"
+@rendermode InteractiveServer
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Web
+
+<PageTitle>The Sea Gypsies - Library</PageTitle>
+
+<div class="viewport">
+  <div class="library-container">
+    <div class="library-background">
+      <div class="library-bg-layer" id="libraryBgA"></div>
+      <div class="library-bg-layer" id="libraryBgB"></div>
+    </div>
+
+    <!-- Invisible hotspots for hover areas -->
+    <div class="hotspot read-hotspot"
+         @onclick="OpenScript"></div>
+
+    <div class="hotspot download-hotspot"
+         @onmouseenter="ShowDownloadHover"
+         @onmouseleave="ShowDefault"
+         @onclick="ShowDownloadForm"></div>
+
+    <div class="hotspot watch-hotspot"
+         @onmouseenter="ShowWatchHover"
+         @onmouseleave="ShowDefault"
+         @onclick="OpenVideo"></div>
+
+    <div class="hotspot home-hotspot"
+         @onmouseenter="ShowHomeHover"
+         @onmouseleave="ShowDefault"
+         @onclick="NavigateHome"></div>
+
+    <!-- Default Content Area -->
+    @if (!showScript && !showVideo)
+    {
+      <div class="content-area default-content">
+        <div class="video-placeholder">
+          <img src="library/video_placeholder.png" alt="Video Placeholder" class="placeholder-image" />
+          <button class="script-button" @onclick="OpenScript">
+            <img src="library/click_to_read_script.png" alt="Click to Read Script" />
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Popup Content Areas -->
+    @if (showScript)
+    {
+      <div class="content-area">
+        <button class="content-close" @onclick="CloseContent">×</button>
+        <iframe class="content-pdf" src="@scriptUrl#toolbar=1&navpanes=1" title="Script PDF"></iframe>
+        <div class="pdf-fallback"><a href="@scriptUrl" target="_blank" rel="noopener">Open PDF in new tab</a></div>
+        <button class="download-script-btn" @onclick="ShowDownloadForm">Download Script</button>
+      </div>
+    }
+
+    @if (showVideo)
+    {
+      <div class="content-area">
+        <button class="content-close" @onclick="CloseContent">×</button>
+        <video class="content-video" controls>
+          <source src="library/TSG_Trailer_V3.mp4" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+      </div>
+    }
+
+  @if (showDownloadForm)
+    {
+      <div class="download-form-overlay" @onclick="HideDownloadForm">
+        <div class="download-form-container" @onclick:stopPropagation="true">
+          <h2>Download The Script</h2>
+          <p>Enter your information to receive the script via email:</p>
+          
+          <form @onsubmit="SubmitDownloadForm" @onsubmit:preventDefault="true">
+            <div class="form-group">
+              <label for="firstName">First Name (Optional)</label>
+              <input type="text" id="firstName" @bind="downloadForm.FirstName" placeholder="Enter first name" />
+            </div>
+            
+            <div class="form-group">
+              <label for="lastName">Last Name (Optional)</label>
+              <input type="text" id="lastName" @bind="downloadForm.LastName" placeholder="Enter last name" />
+            </div>
+            
+            <div class="form-group">
+              <label for="email">Email Address *</label>
+              <input type="email" id="email" @bind="downloadForm.Email" placeholder="Enter email address" required />
+              @if (!string.IsNullOrEmpty(emailError))
+              {
+                <div class="error-message">@emailError</div>
+              }
+            </div>
+            
+            <div class="form-buttons">
+              <button type="button" class="btn-cancel" @onclick="HideDownloadForm">Cancel</button>
+              <button type="submit" class="btn-submit" disabled="@isSubmitting">
+                @if (isSubmitting)
+                {
+                  <span>Sending...</span>
+                }
+                else
+                {
+                  <span>Send Script</span>
+                }
+              </button>
+            </div>
+          </form>
+          
+          <button class="form-close" @onclick="HideDownloadForm">×</button>
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+<style>
+  html, body, #app {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background: #000; /* letterbox */
+    overflow: hidden;
+  }
+
+  .viewport {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+
+  .library-container {
+    position: relative;
+    width: min(100vw, calc(100vh * 16 / 9));
+    height: min(calc(100vw * 9 / 16), 100vh);
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+  }
+
+  .library-background { position: absolute; inset: 0; z-index: 1; }
+  .library-bg-layer {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0;
+    transition: none; /* instant swap */
+  }
+
+  .hotspot {
+    position: absolute;
+    cursor: pointer;
+    z-index: 10;
+  }
+  /* Left area – Read the Script */
+  .read-hotspot { left: 3.91%; top: 16.67%; width: 26.72%; height: 3.70%; }
+  /* Download the Script area */
+  .download-hotspot { left: 3.18%; top: 57.87%; width: 26.62%; height: 5.46%; }
+  /* Watch the Video area */
+  .watch-hotspot { left: 7.08%; top: 73.24%; width: 18.23%; height: 18.52%; }
+  /* Home spot – align with Gallery page location */
+  .home-hotspot { left: 1.3%; top: 90.13%; width: 60px; height: 60px; }
+
+  /* Content area with specific bounds */
+  .content-area {
+    position: absolute;
+    left: 654px;
+    top: 257px;
+    width: 1176px;
+    height: 653px;
+    z-index: 20;
+    background: rgba(2, 15, 18, 0.82);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 8px;
+    color: #e7f6fb;
+    padding: 12px;
+    box-sizing: border-box;
+    display: grid;
+  }
+  .content-close {
+    position: absolute; top: 6px; right: 8px; border: none; background: transparent; color: #fff; font-size: 26px; cursor: pointer; line-height: 1;
+  }
+  .placeholder { align-self: center; justify-self: center; text-align: center; padding: 8px 12px; }
+  .content-iframe { width: 100%; height: 100%; border: 0; border-radius: 4px; }
+  .content-pdf { width: 100%; height: 100%; border: 0; border-radius: 4px; background: #0a0f12; }
+  .content-video { width: 100%; height: 100%; border: 0; border-radius: 4px; background: #000; object-fit: contain; }
+  .pdf-fallback { position: absolute; bottom: 6px; right: 10px; font-size: 12px; opacity: 0.8; }
+
+  .download-script-btn {
+    position: absolute;
+    bottom: 6px;
+    left: 10px;
+    background: rgba(14, 165, 233, 0.9);
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+
+  .download-script-btn:hover {
+    background: rgba(14, 165, 233, 1);
+  }
+
+  /* Default Content Area */
+  .default-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .video-placeholder {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .placeholder-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+
+  .script-button {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 2;
+  }
+
+  .script-button:hover {
+    transform: translate(-50%, -50%) scale(1.05);
+    filter: brightness(1.1);
+  }
+
+  .script-button img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+
+  .download-form-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+  }
+
+  .download-form-container {
+    background: rgba(2, 15, 18, 0.95);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 32px;
+    max-width: 480px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+    position: relative;
+    color: #e7f6fb;
+  }
+
+  .download-form-container h2 {
+    color: #fff;
+    margin: 0 0 8px 0;
+    font-size: 24px;
+    font-weight: 600;
+  }
+
+  .download-form-container p {
+    color: rgba(231, 246, 251, 0.8);
+    margin: 0 0 24px 0;
+    font-size: 14px;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #e7f6fb;
+  }
+
+  .form-group input {
+    width: 100%;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    color: #fff;
+    font-size: 16px;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+  }
+
+  .form-group input:focus {
+    outline: none;
+    border-color: rgba(14, 165, 233, 0.6);
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+  }
+
+  .form-group input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .error-message {
+    color: #ef4444;
+    font-size: 12px;
+    margin-top: 4px;
+  }
+
+  .form-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 32px;
+  }
+
+  .btn-cancel {
+    padding: 12px 24px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+    color: #e7f6fb;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+  }
+
+  .btn-cancel:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+
+  .btn-submit {
+    padding: 12px 24px;
+    background: rgba(14, 165, 233, 0.9);
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    min-width: 120px;
+  }
+
+  .btn-submit:hover:not(:disabled) {
+    background: rgba(14, 165, 233, 1);
+    transform: translateY(-1px);
+  }
+
+  .btn-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .form-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 24px;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+  }
+
+  .form-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+  }
+</style>
+
+@code {
+  [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+  [Inject] private NavigationManager Navigation { get; set; } = default!;
+
+  private bool showScript = false;
+  private bool showVideo = false;
+  private bool showDownloadForm = false;
+  private bool isSubmitting = false;
+  private string scriptUrl = "library/SEA GYPSIES COMPLETE SCRIPT MASTER.pdf";
+  private string emailError = "";
+
+  private DownloadFormModel downloadForm = new DownloadFormModel();
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (firstRender)
+    {
+      try
+      {
+        await JSRuntime.InvokeVoidAsync("initLibraryBackground", "library/library_default.png");
+        var imgs = new[] {
+          "library/library_default.png",
+          "library/library_read_script.png",
+          "library/library_download_script.png",
+          "library/library_home.png"
+        };
+        await JSRuntime.InvokeVoidAsync("preloadImages", imgs);
+      }
+      catch { }
+    }
+  }
+
+  private async Task ShowReadHover() => await JSRuntime.InvokeVoidAsync("setLibraryBackground", "library/library_read_script.png");
+  private async Task ShowDownloadHover() => await JSRuntime.InvokeVoidAsync("setLibraryBackground", "library/library_download_script.png");
+  private async Task ShowWatchHover() => await JSRuntime.InvokeVoidAsync("setLibraryBackground", "library/library_default.png");
+  private async Task ShowHomeHover() => await JSRuntime.InvokeVoidAsync("setLibraryBackground", "library/library_home.png");
+  private async Task ShowDefault() => await JSRuntime.InvokeVoidAsync("setLibraryBackground", "library/library_default.png");
+
+  private void OpenScript() { showVideo = false; showScript = true; }
+  private void OpenVideo() { showScript = false; showVideo = true; }
+  private void CloseContent() { showScript = false; showVideo = false; }
+
+  private void ShowDownloadForm()
+  {
+    showDownloadForm = true;
+    emailError = "";
+    downloadForm = new DownloadFormModel();
+  }
+
+  private void HideDownloadForm()
+  {
+    showDownloadForm = false;
+    emailError = "";
+    isSubmitting = false;
+  }
+
+  private async Task SubmitDownloadForm()
+  {
+    emailError = "";
+    
+    if (string.IsNullOrWhiteSpace(downloadForm.Email))
+    {
+      emailError = "Email address is required.";
+      return;
+    }
+
+    if (!IsValidEmail(downloadForm.Email))
+    {
+      emailError = "Please enter a valid email address.";
+      return;
+    }
+
+    isSubmitting = true;
+    StateHasChanged();
+
+    try
+    {
+      // TODO: Add backend API call here to send the script via email
+      await SimulateEmailSending();
+      
+      // Show success message (for now just hide the form)
+      HideDownloadForm();
+      
+      // TODO: Show success notification to user
+      await ShowSuccessMessage();
+    }
+    catch
+    {
+      emailError = "An error occurred while sending the script. Please try again.";
+    }
+    finally
+    {
+      isSubmitting = false;
+      StateHasChanged();
+    }
+  }
+
+  private async Task SimulateEmailSending()
+  {
+    // Simulate API call delay
+    await Task.Delay(2000);
+  }
+
+  private async Task ShowSuccessMessage()
+  {
+    try
+    {
+      await JSRuntime.InvokeVoidAsync("alert", "Script sent successfully! Please check your email.");
+    }
+    catch
+    {
+      // Fallback if JS alert fails
+    }
+  }
+
+  private bool IsValidEmail(string email)
+  {
+    try
+    {
+      var addr = new System.Net.Mail.MailAddress(email);
+      return addr.Address == email;
+    }
+    catch
+    {
+      return false;
+    }
+  }
+
+  private async Task NavigateHome() => await JSRuntime.InvokeVoidAsync("navigateWithTransition", "/desktop", "right");
+
+  public class DownloadFormModel
+  {
+    public string FirstName { get; set; } = "";
+    public string LastName { get; set; } = "";
+    public string Email { get; set; } = "";
+  }
+}
