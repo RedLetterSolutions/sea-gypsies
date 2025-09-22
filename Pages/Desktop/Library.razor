@@ -14,7 +14,9 @@
 
     <!-- Invisible hotspots for hover areas -->
     <div class="hotspot read-hotspot"
-         @onclick="OpenScript"></div>
+      @onmouseenter="ShowReadHover"
+      @onmouseleave="ShowDefault"
+      @onclick="OpenScript"></div>
 
     <div class="hotspot download-hotspot"
          @onmouseenter="ShowDownloadHover"
@@ -34,7 +36,7 @@
     <!-- Default Content Area -->
     @if (!showScript && !showVideo)
     {
-      <div class="content-area default-content">
+      <div class="@DefaultContentAreaClass">
         <div class="video-placeholder">
           <img src="library/video_placeholder.png" alt="Video Placeholder" class="placeholder-image" />
           <button class="script-button" @onclick="OpenScript">
@@ -47,9 +49,9 @@
     <!-- Popup Content Areas -->
     @if (showScript)
     {
-      <div class="content-area">
-        <button class="content-close" @onclick="CloseContent">×</button>
-        <iframe class="content-pdf" src="@scriptUrl#toolbar=1&navpanes=1" title="Script PDF"></iframe>
+      <div class="@ContentAreaClass">
+        <button class="content-close" @onclick="CloseContent" aria-label="Close">×</button>
+        <iframe class="content-pdf" src="@PdfViewerUrl" title="Script PDF (embedded viewer)"></iframe>
         <div class="pdf-fallback"><a href="@scriptUrl" target="_blank" rel="noopener">Open PDF in new tab</a></div>
         <button class="download-script-btn" @onclick="ShowDownloadForm">Download Script</button>
       </div>
@@ -57,9 +59,9 @@
 
     @if (showVideo)
     {
-      <div class="content-area">
-        <button class="content-close" @onclick="CloseContent">×</button>
-        <video class="content-video" controls>
+      <div class="@ContentAreaClass">
+        <button class="content-close" @onclick="CloseContent" aria-label="Close">×</button>
+        <video class="content-video" controls preload="metadata" playsinline poster="library/video_placeholder.png" title="Sea Gypsies Trailer">
           <source src="library/TSG_Trailer_V3.mp4" type="video/mp4">
           Your browser does not support the video tag.
         </video>
@@ -138,6 +140,11 @@
     height: min(calc(100vw * 9 / 16), 100vh);
     aspect-ratio: 16 / 9;
     overflow: hidden;
+    /* Tunable placement for the content area relative to this 16:9 container */
+  --content-left: 35.5%; /* +5% more to the right */
+  --content-top: 24.0%;  /* +5% more down */
+    --content-width: 58.5%;
+    --content-height: 58%;
   }
 
   .library-background { position: absolute; inset: 0; z-index: 1; }
@@ -168,13 +175,14 @@
   /* Content area with specific bounds */
   .content-area {
     position: absolute;
-    left: 654px;
-    top: 257px;
-    width: 1176px;
-    height: 653px;
+    /* Positioned as percentages relative to the 16:9 container */
+    left: var(--content-left);
+    top: var(--content-top);
+    width: var(--content-width);
+    height: var(--content-height);
     z-index: 20;
-    background: rgba(2, 15, 18, 0.82);
-    border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(2, 15, 18, 0.82);
+  border: none;
     border-radius: 8px;
     color: #e7f6fb;
     padding: 12px;
@@ -189,6 +197,12 @@
   .content-pdf { width: 100%; height: 100%; border: 0; border-radius: 4px; background: #0a0f12; }
   .content-video { width: 100%; height: 100%; border: 0; border-radius: 4px; background: #000; object-fit: contain; }
   .pdf-fallback { position: absolute; bottom: 6px; right: 10px; font-size: 12px; opacity: 0.8; }
+
+  /* Dev-only outline helper to visualize the content area bounds */
+  .dev-outline {
+    outline: 2px solid rgba(79, 209, 255, 0.9);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+  }
 
   .download-script-btn {
     position: absolute;
@@ -433,7 +447,17 @@
     }
   }
 
-  private async Task ShowReadHover() => await JSRuntime.InvokeVoidAsync("setLibraryBackground", "library/library_read_script.png");
+  // Build URL for embedded PDF.js viewer shipped in wwwroot/library/viewer.html
+  private string PdfViewerUrl => $"library/viewer.html?file={Uri.EscapeDataString(scriptUrl)}";
+
+  // Dev outline toggle via query params: ?outline=1 or ?debug=1
+  private bool DevOutline => Navigation.Uri.Contains("outline=1", StringComparison.OrdinalIgnoreCase)
+                          || Navigation.Uri.Contains("debug=1", StringComparison.OrdinalIgnoreCase);
+  private string ContentAreaClass => $"content-area{(DevOutline ? " dev-outline" : string.Empty)}";
+  private string DefaultContentAreaClass => $"content-area default-content{(DevOutline ? " dev-outline" : string.Empty)}";
+
+  // Do not change the background on "Read the Script" hover
+  private Task ShowReadHover() => Task.CompletedTask;
   private async Task ShowDownloadHover() => await JSRuntime.InvokeVoidAsync("setLibraryBackground", "library/library_download_script.png");
   private async Task ShowWatchHover() => await JSRuntime.InvokeVoidAsync("setLibraryBackground", "library/library_default.png");
   private async Task ShowHomeHover() => await JSRuntime.InvokeVoidAsync("setLibraryBackground", "library/library_home.png");
