@@ -1,0 +1,174 @@
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components
+
+@if (IsOpen)
+{
+  <div class="df-overlay" @onclick="HandleOverlayClick">
+  <div class="df-container @(DebugOverlay ? "df-debug" : string.Empty)" style="@ContainerBackgroundStyle" @onclick:stopPropagation="true">
+      <button class="df-close" @onclick="OnCancel" aria-label="Close">×</button>
+
+      <EditForm Model="model" OnValidSubmit="SubmitInternal">
+        <DataAnnotationsValidator />
+        <div class="df-form">
+          <input class="df-input df-first" type="text" id="df-first" aria-label="First Name (Optional)"
+                 @bind="model.FirstName" autocomplete="given-name" />
+
+          <input class="df-input df-last" type="text" id="df-last" aria-label="Last Name (Optional)"
+                 @bind="model.LastName" autocomplete="family-name" />
+
+          <input class="df-input df-email" type="email" id="df-email" aria-label="Email Address" required
+                 @bind="model.Email" autocomplete="email" />
+
+          @if (!string.IsNullOrEmpty(Error))
+          {
+            <div class="df-error">@Error</div>
+          }
+
+          <button type="submit" class="df-btn df-send" aria-label="Send Script" disabled="@isSubmitting"></button>
+          <button type="button" class="df-btn df-cancel" aria-label="Cancel" @onclick="OnCancel"></button>
+        </div>
+      </EditForm>
+    </div>
+  </div>
+}
+
+@code {
+  [Parameter] public bool IsOpen { get; set; }
+  [Parameter] public EventCallback<FormModel> OnSubmit { get; set; }
+  [Parameter] public EventCallback OnCancel { get; set; }
+  [Inject] private NavigationManager Nav { get; set; } = default!;
+  [Parameter] public string? BackgroundUrl { get; set; }
+
+  private bool isSubmitting;
+  private string Error = string.Empty;
+  private FormModel model = new();
+  private bool DebugOverlay =>
+    Nav.Uri.Contains("dfdebug=1", StringComparison.OrdinalIgnoreCase) ||
+    Nav.Uri.Contains("debug=1", StringComparison.OrdinalIgnoreCase);
+  private const string DefaultBackground = "/library/SEA GYPSIES WEBSITE  CONTACT FORM.png";
+  private string ContainerBackgroundStyle => string.IsNullOrWhiteSpace(BackgroundUrl)
+      ? $"background: url('{DefaultBackground}') center/cover no-repeat;"
+      : $"background: url('{BackgroundUrl}') center/cover no-repeat, url('{DefaultBackground}') center/cover no-repeat;";
+
+  private async Task SubmitInternal()
+  {
+    Error = string.Empty;
+    if (string.IsNullOrWhiteSpace(model.Email))
+    {
+      Error = "Email address is required.";
+      return;
+    }
+
+    isSubmitting = true;
+    try
+    {
+      await OnSubmit.InvokeAsync(model);
+    }
+    finally
+    {
+      isSubmitting = false;
+    }
+  }
+
+  private async Task HandleOverlayClick()
+  {
+    await OnCancel.InvokeAsync();
+  }
+
+  public class FormModel
+  {
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName  { get; set; } = string.Empty;
+    public string Email     { get; set; } = string.Empty;
+  }
+}
+
+<style>
+  /* Fullscreen dark overlay */
+  .df-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: grid;
+    place-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(3px);
+  }
+
+  /* Form container with provided artwork as the background */
+  .df-container {
+    position: relative;
+    width: clamp(640px, 52vw, 820px);
+  aspect-ratio: 748 / 722; /* initial guess; adjust if needed to match asset */
+    box-shadow: none; /* remove dark outer glow/frame */
+    border: none; /* remove any visible frame */
+  }
+
+  .df-close {
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.9);
+    font-size: 28px;
+    cursor: pointer;
+    z-index: 2;
+  }
+
+  .df-form { position: relative; width: 100%; height: 100%; }
+
+  /* Shared input styles (transparent so the artwork shows through) */
+  .df-input {
+    position: absolute;
+    left: 7.4%;
+    width: 85.2%;
+  height: 9.2%;
+    background: transparent;
+    border: none;
+    color: #e7f6fb;
+    font-size: clamp(14px, 1.9vw, 18px);
+    padding: 10px 14px;
+    box-sizing: border-box;
+    outline: none;
+    caret-color: #59d2ea;
+  }
+  .df-input::placeholder { color: rgba(231,246,251,0.65); }
+
+  /* Positions estimated to align with the boxes in the artwork */
+  .df-first { top: 27.5%; }
+  .df-last  { top: 45.9%; }
+  .df-email { top: 64.0%; }
+
+  .df-error {
+    position: absolute;
+    top: 75.5%;
+    left: 7.4%;
+    color: #ef4444;
+    font-size: 12px;
+  }
+
+  /* Button hit-areas over the artwork buttons */
+  .df-btn {
+    position: absolute;
+  top: 88.2%;
+  height: 8.4%;
+    background: transparent;
+    border: none;
+    color: transparent; /* hide any default text */
+    font-size: 0; /* ensure no visible label */
+    cursor: pointer;
+  }
+  .df-send   { left: 7.4%;  width: 41.8%; }
+  .df-cancel { left: 66.0%; width: 24.4%; }
+
+  .df-input:focus, .df-btn:focus {
+    outline: 2px solid rgba(89,210,234,0.85);
+    outline-offset: 2px;
+  }
+
+  /* Debug overlay mode to visualize hit-area bounds */
+  .df-debug .df-input { outline: 2px dashed rgba(255, 255, 255, 0.6); }
+  .df-debug .df-btn   { outline: 2px dashed rgba(56, 189, 248, 0.9); }
+  .df-btn:disabled { cursor: wait; }
+</style>

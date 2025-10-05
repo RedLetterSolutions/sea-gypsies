@@ -5,6 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="/" />
+    <link rel="stylesheet" href="https://use.typekit.net/tkz8vzf.css">
     <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="css/app.css" />
     <link rel="icon" type="image/png" href="gallery/favicon/favicon.png" />
@@ -187,6 +188,25 @@
                 top.style.transition = prevTopTransition;
                 bottom.style.transition = prevBottomTransition;
             }, 0);
+        };
+
+        // Mobile navigation functionality
+        let mobilePageComponent = null;
+
+        window.addMobileMenuListener = (dotNetObjectRef) => {
+            console.log('addMobileMenuListener called with:', dotNetObjectRef);
+            mobilePageComponent = dotNetObjectRef;
+        };
+
+        // Function that can be called from the toggle button
+        window.toggleMobileMenu = () => {
+            console.log('toggleMobileMenu called');
+            if (mobilePageComponent) {
+                console.log('Invoking ToggleMenuFromJS on component');
+                mobilePageComponent.invokeMethodAsync('ToggleMenuFromJS');
+            } else {
+                console.warn('No mobile page component registered');
+            }
         };
     </script>
 

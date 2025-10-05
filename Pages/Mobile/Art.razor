@@ -4,6 +4,19 @@
 
 <PageTitle>The Sea Gypsies - Art Gallery</PageTitle>
 
+<!-- Mobile Navigation Banner -->
+<div class="mobile-navbar" id="deviceBanner">
+    <button class="mobile-nav-toggle" id="mobileNavToggle" @onclick="ToggleMenu">
+        <div class="wave-container">
+            <div class="wave wave1"></div>
+            <div class="wave wave2"></div>
+            <div class="wave wave3"></div>
+        </div>
+        <div class="anchor-icon">⚓</div>
+    </button>
+    <span class="navbar-text">FOR BEST EXPERIENCE PLEASE VIEW ON A DESKTOP DEVICE</span>
+</div>
+
 <div class="viewport">
 <div class="gallery-container">
 
@@ -37,6 +50,12 @@
     <!-- Logo at top -->
     <div class="gallery-logo">
         <img src="logo.png" alt="The Sea Gypsies" class="logo-image" />
+        <h1 class="gallery-title">THE GALLERY</h1>
+    </div>
+
+    <!-- Description text -->
+    <div class="gallery-description">
+        <p>Scroll through the collection of concept art and production design for the Sea Gypsies</p>
     </div>
 
     <!-- Main image display area -->
@@ -64,6 +83,13 @@
                 </div>
             }
         </div>
+    </div>
+
+    <!-- Home button -->
+    <div class="home-button-container">
+        <button class="home-button" @onclick="NavigateToHome">
+            <img src="/library/mobile/mobile_home.png" alt="Home" />
+        </button>
     </div>
 </div>
 </div>
@@ -133,12 +159,44 @@
         filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
     }
 
+    .gallery-logo .gallery-title {
+        color: #ffffff;
+        font-family: 'apotek', sans-serif;
+        font-size: 20px;
+        font-weight: 600;
+        letter-spacing: 2px;
+        margin: 8px 0 0 0;
+        text-align: center;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+    }
+
+    /* Gallery Description */
+    .gallery-description {
+        position: absolute;
+        top: 110px;
+        left: 5%;
+        width: 90%;
+        z-index: 3;
+        text-align: center;
+    }
+
+    .gallery-description p {
+        color: #67f6ff;
+        font-family: 'apotek', sans-serif;
+        font-size: 14px;
+        font-weight: 400;
+        margin: 0 0 8px 0;
+        padding: 0 10px;
+        line-height: 1.4;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+    }
+
     .main-image-container {
         position: absolute;
         left: 5%;
-        top: 120px; /* Below logo */
+        top: 145px; /* Below description text */
         width: 90%;
-        height: calc(50vh - 60px); /* Adjusted for logo space */
+        height: calc(50vh - 85px); /* Adjusted for logo and description space */
         z-index: 2;
         display: flex;
         align-items: center;
@@ -283,6 +341,36 @@
         background: rgba(255, 255, 255, 0.6);
     }
 
+    /* Home Button */
+    .home-button-container {
+        position: absolute;
+        bottom: 15px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 10;
+    }
+
+    .home-button {
+        background: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        opacity: 0.9;
+    }
+
+    .home-button img {
+        height: 50px;
+        width: auto;
+        display: block;
+    }
+
+    .home-button:hover {
+        opacity: 1;
+        transform: translateY(-3px);
+        filter: drop-shadow(0 4px 12px rgba(103, 246, 255, 0.5));
+    }
+
     /* Navigation buttons removed on mobile - using hamburger menu and thumbnails instead */
 
     /* Navigation Menu */
@@ -292,7 +380,7 @@
         left: 0;
         width: 100%;
         height: 100%;
-        z-index: 999;
+        z-index: 10001;
         pointer-events: none;
         transition: all 0.3s ease;
     }
@@ -396,6 +484,111 @@
         background: rgba(14, 165, 233, 0.2);
         color: #fff;
         border-left-color: #0ea5e9;
+    }
+
+    /* Mobile Navbar */
+    .mobile-navbar {
+        position: fixed;
+        top: 0; left: 0; right: 0;
+        background: rgba(2, 15, 18, 0.95);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid rgba(103, 246, 255, 0.3);
+        padding: 8px 16px;
+        z-index: 10000;
+        display: flex;
+        height: 60px;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    .mobile-nav-toggle {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: linear-gradient(135deg, rgba(14, 165, 233, 0.9) 0%, rgba(6, 182, 212, 0.9) 50%, rgba(59, 130, 246, 0.9) 100%);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        width: 44px;
+        height: 44px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(15px);
+        box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+        overflow: hidden;
+    }
+
+    .mobile-nav-toggle:hover {
+        transform: translateY(-50%) scale(1.05);
+        box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4);
+    }
+
+    .navbar-text {
+        color: #67f6ff;
+        font-family: 'Apotek Comp', system-ui, -apple-system, sans-serif;
+        font-size: 14px;
+        font-weight: bold;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        text-shadow: 0 0 8px rgba(103, 246, 255, 0.3);
+        text-align: center;
+        line-height: 1.2;
+        margin: 0 60px;
+    }
+
+    .mobile-nav-toggle .wave-container {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        overflow: hidden;
+    }
+
+    .mobile-nav-toggle .wave {
+        position: absolute;
+        bottom: -5px;
+        left: -50%;
+        width: 200%;
+        height: 12px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        animation: wave-motion 3s ease-in-out infinite;
+    }
+
+    .mobile-nav-toggle .wave1 {
+        animation-delay: 0s;
+        opacity: 0.7;
+    }
+
+    .mobile-nav-toggle .wave2 {
+        animation-delay: 1s;
+        opacity: 0.5;
+        height: 10px;
+    }
+
+    .mobile-nav-toggle .wave3 {
+        animation-delay: 2s;
+        opacity: 0.3;
+        height: 8px;
+    }
+
+    .mobile-nav-toggle .anchor-icon {
+        font-size: 18px;
+        color: #fff;
+        z-index: 2;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    @@keyframes wave-motion {
+        0%, 100% {
+            transform: translateX(0) rotate(0deg);
+        }
+        50% {
+            transform: translateX(5px) rotate(180deg);
+        }
     }
 </style>
 
@@ -603,6 +796,11 @@
     private void CloseMenu()
     {
         isMenuOpen = false;
+    }
+
+    private void NavigateToHome()
+    {
+        Navigation.NavigateTo("/mobile");
     }
 
     private async Task HandleThumbnailScroll(WheelEventArgs e)

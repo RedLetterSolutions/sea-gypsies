@@ -33,6 +33,7 @@
          @onmouseleave="ShowDefault"
          @onclick="NavigateHome"></div>
 
+
     <!-- Default Content Area -->
     @if (!showScript && !showVideo)
     {
@@ -51,7 +52,8 @@
     {
       <div class="@ContentAreaClass">
         <button class="content-close" @onclick="CloseContent" aria-label="Close">×</button>
-        <iframe class="content-pdf" src="@PdfViewerUrl" title="Script PDF (embedded viewer)"></iframe>
+        <!-- Reverted: use browser's native PDF viewer directly -->
+        <iframe class="content-pdf" src="@scriptUrl" title="Script PDF"></iframe>
         <div class="pdf-fallback"><a href="@scriptUrl" target="_blank" rel="noopener">Open PDF in new tab</a></div>
         <button class="download-script-btn" @onclick="ShowDownloadForm">Download Script</button>
       </div>
@@ -68,52 +70,11 @@
       </div>
     }
 
-  @if (showDownloadForm)
-    {
-      <div class="download-form-overlay" @onclick="HideDownloadForm">
-        <div class="download-form-container" @onclick:stopPropagation="true">
-          <h2>Download The Script</h2>
-          <p>Enter your information to receive the script via email:</p>
-          
-          <form @onsubmit="SubmitDownloadForm" @onsubmit:preventDefault="true">
-            <div class="form-group">
-              <label for="firstName">First Name (Optional)</label>
-              <input type="text" id="firstName" @bind="downloadForm.FirstName" placeholder="Enter first name" />
-            </div>
-            
-            <div class="form-group">
-              <label for="lastName">Last Name (Optional)</label>
-              <input type="text" id="lastName" @bind="downloadForm.LastName" placeholder="Enter last name" />
-            </div>
-            
-            <div class="form-group">
-              <label for="email">Email Address *</label>
-              <input type="email" id="email" @bind="downloadForm.Email" placeholder="Enter email address" required />
-              @if (!string.IsNullOrEmpty(emailError))
-              {
-                <div class="error-message">@emailError</div>
-              }
-            </div>
-            
-            <div class="form-buttons">
-              <button type="button" class="btn-cancel" @onclick="HideDownloadForm">Cancel</button>
-              <button type="submit" class="btn-submit" disabled="@isSubmitting">
-                @if (isSubmitting)
-                {
-                  <span>Sending...</span>
-                }
-                else
-                {
-                  <span>Send Script</span>
-                }
-              </button>
-            </div>
-          </form>
-          
-          <button class="form-close" @onclick="HideDownloadForm">×</button>
-        </div>
-      </div>
-    }
+    <SeaGypsies.Pages.Desktop.DownloadScriptForm
+      IsOpen="@showDownloadForm"
+      BackgroundUrl="/library/SEA GYPSIES WEBSITE  CONTACT FORM.png"
+      OnSubmit="@HandleFormSubmit"
+      OnCancel="@HideDownloadForm" />
   </div>
 </div>
 
@@ -268,151 +229,9 @@
     height: auto;
   }
 
-  .download-form-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    backdrop-filter: blur(4px);
-  }
+  /* Top-right contact button */
+  
 
-  .download-form-container {
-    background: rgba(2, 15, 18, 0.95);
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    border-radius: 12px;
-    padding: 32px;
-    max-width: 480px;
-    width: 90%;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
-    position: relative;
-    color: #e7f6fb;
-  }
-
-  .download-form-container h2 {
-    color: #fff;
-    margin: 0 0 8px 0;
-    font-size: 24px;
-    font-weight: 600;
-  }
-
-  .download-form-container p {
-    color: rgba(231, 246, 251, 0.8);
-    margin: 0 0 24px 0;
-    font-size: 14px;
-  }
-
-  .form-group {
-    margin-bottom: 20px;
-  }
-
-  .form-group label {
-    display: block;
-    margin-bottom: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    color: #e7f6fb;
-  }
-
-  .form-group input {
-    width: 100%;
-    padding: 12px 16px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 6px;
-    color: #fff;
-    font-size: 16px;
-    transition: all 0.2s ease;
-    box-sizing: border-box;
-  }
-
-  .form-group input:focus {
-    outline: none;
-    border-color: rgba(14, 165, 233, 0.6);
-    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
-  }
-
-  .form-group input::placeholder {
-    color: rgba(255, 255, 255, 0.5);
-  }
-
-  .error-message {
-    color: #ef4444;
-    font-size: 12px;
-    margin-top: 4px;
-  }
-
-  .form-buttons {
-    display: flex;
-    gap: 12px;
-    justify-content: flex-end;
-    margin-top: 32px;
-  }
-
-  .btn-cancel {
-    padding: 12px 24px;
-    background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 6px;
-    color: #e7f6fb;
-    cursor: pointer;
-    font-size: 14px;
-    transition: all 0.2s ease;
-  }
-
-  .btn-cancel:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.4);
-  }
-
-  .btn-submit {
-    padding: 12px 24px;
-    background: rgba(14, 165, 233, 0.9);
-    border: none;
-    border-radius: 6px;
-    color: #fff;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.2s ease;
-    min-width: 120px;
-  }
-
-  .btn-submit:hover:not(:disabled) {
-    background: rgba(14, 165, 233, 1);
-    transform: translateY(-1px);
-  }
-
-  .btn-submit:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
-  }
-
-  .form-close {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    background: transparent;
-    border: none;
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 24px;
-    cursor: pointer;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 4px;
-    transition: all 0.2s ease;
-  }
-
-  .form-close:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: #fff;
-  }
 </style>
 
 @code {
@@ -422,11 +241,7 @@
   private bool showScript = false;
   private bool showVideo = false;
   private bool showDownloadForm = false;
-  private bool isSubmitting = false;
   private string scriptUrl = "library/SEA GYPSIES COMPLETE SCRIPT MASTER.pdf";
-  private string emailError = "";
-
-  private DownloadFormModel downloadForm = new DownloadFormModel();
 
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {
@@ -442,6 +257,12 @@
           "library/library_home.png"
         };
         await JSRuntime.InvokeVoidAsync("preloadImages", imgs);
+        // Auto-open contact form if requested via query string (from top-right button on other pages)
+        if (Navigation.Uri.Contains("openContact=1", StringComparison.OrdinalIgnoreCase))
+        {
+          showDownloadForm = true;
+          StateHasChanged();
+        }
       }
       catch { }
     }
@@ -470,55 +291,29 @@
   private void ShowDownloadForm()
   {
     showDownloadForm = true;
-    emailError = "";
-    downloadForm = new DownloadFormModel();
   }
 
   private void HideDownloadForm()
   {
     showDownloadForm = false;
-    emailError = "";
-    isSubmitting = false;
   }
 
-  private async Task SubmitDownloadForm()
+  private async Task HandleFormSubmit(DownloadScriptForm.FormModel model)
   {
-    emailError = "";
-    
-    if (string.IsNullOrWhiteSpace(downloadForm.Email))
-    {
-      emailError = "Email address is required.";
-      return;
-    }
-
-    if (!IsValidEmail(downloadForm.Email))
-    {
-      emailError = "Please enter a valid email address.";
-      return;
-    }
-
-    isSubmitting = true;
-    StateHasChanged();
-
     try
     {
       // TODO: Add backend API call here to send the script via email
       await SimulateEmailSending();
-      
+
       // Show success message (for now just hide the form)
       HideDownloadForm();
-      
+
       // TODO: Show success notification to user
       await ShowSuccessMessage();
     }
     catch
     {
-      emailError = "An error occurred while sending the script. Please try again.";
-    }
-    finally
-    {
-      isSubmitting = false;
-      StateHasChanged();
+      // TODO: Handle errors - maybe expose an error state in the form component
     }
   }
 
@@ -540,25 +335,5 @@
     }
   }
 
-  private bool IsValidEmail(string email)
-  {
-    try
-    {
-      var addr = new System.Net.Mail.MailAddress(email);
-      return addr.Address == email;
-    }
-    catch
-    {
-      return false;
-    }
-  }
-
   private async Task NavigateHome() => await JSRuntime.InvokeVoidAsync("navigateWithTransition", "/desktop", "right");
-
-  public class DownloadFormModel
-  {
-    public string FirstName { get; set; } = "";
-    public string LastName { get; set; } = "";
-    public string Email { get; set; } = "";
-  }
 }

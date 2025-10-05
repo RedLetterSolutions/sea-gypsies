@@ -5,6 +5,19 @@
 
 <PageTitle>The Sea Gypsies - Library</PageTitle>
 
+<!-- Mobile Navigation Banner -->
+<div class="mobile-navbar" id="deviceBanner">
+    <button class="mobile-nav-toggle" id="mobileNavToggle" @onclick="ToggleMenu">
+        <div class="wave-container">
+            <div class="wave wave1"></div>
+            <div class="wave wave2"></div>
+            <div class="wave wave3"></div>
+        </div>
+        <div class="anchor-icon">⚓</div>
+    </button>
+    <span class="navbar-text">FOR BEST EXPERIENCE PLEASE VIEW ON A DESKTOP DEVICE</span>
+</div>
+
 <div class="viewport">
   <div class="library-container">
 
@@ -89,52 +102,10 @@
     </div>
   }
 
-  @if (showDownloadForm)
-    {
-      <div class="download-form-overlay" @onclick="HideDownloadForm">
-        <div class="download-form-container" @onclick:stopPropagation="true">
-          <h2>Download The Script</h2>
-          <p>Enter your information to receive the script via email:</p>
-
-          <form @onsubmit="SubmitDownloadForm" @onsubmit:preventDefault="true">
-            <div class="form-group">
-              <label for="firstName">First Name (Optional)</label>
-              <input type="text" id="firstName" @bind="downloadForm.FirstName" placeholder="Enter first name" />
-            </div>
-
-            <div class="form-group">
-              <label for="lastName">Last Name (Optional)</label>
-              <input type="text" id="lastName" @bind="downloadForm.LastName" placeholder="Enter last name" />
-            </div>
-
-            <div class="form-group">
-              <label for="email">Email Address *</label>
-              <input type="email" id="email" @bind="downloadForm.Email" placeholder="Enter email address" required />
-              @if (!string.IsNullOrEmpty(emailError))
-              {
-                <div class="error-message">@emailError</div>
-              }
-            </div>
-
-            <div class="form-buttons">
-              <button type="button" class="btn-cancel" @onclick="HideDownloadForm">Cancel</button>
-              <button type="submit" class="btn-submit" disabled="@isSubmitting">
-                @if (isSubmitting)
-                {
-                  <span>Sending...</span>
-                }
-                else
-                {
-                  <span>Send Script</span>
-                }
-              </button>
-            </div>
-          </form>
-
-          <button class="form-close" @onclick="HideDownloadForm">×</button>
-        </div>
-      </div>
-    }
+    <DownloadScriptForm
+      IsOpen="@showDownloadForm"
+      OnSubmit="@HandleFormSubmit"
+      OnCancel="@HideDownloadForm" />
   </div>
 </div>
 
@@ -434,153 +405,6 @@
     transform: translateY(-1px);
   }
 
-  .download-form-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    backdrop-filter: blur(4px);
-  }
-
-  .download-form-container {
-    background: rgba(2, 15, 18, 0.95);
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    border-radius: 12px;
-    padding: 24px;
-    max-width: 400px;
-    width: 90%;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
-    position: relative;
-    color: #e7f6fb;
-    max-height: 90vh;
-    overflow-y: auto;
-  }
-
-  .download-form-container h2 {
-    color: #fff;
-    margin: 0 0 8px 0;
-    font-size: 20px;
-    font-weight: 600;
-  }
-
-  .download-form-container p {
-    color: rgba(231, 246, 251, 0.8);
-    margin: 0 0 20px 0;
-    font-size: 12px;
-  }
-
-  .form-group {
-    margin-bottom: 16px;
-  }
-
-  .form-group label {
-    display: block;
-    margin-bottom: 4px;
-    font-size: 12px;
-    font-weight: 500;
-    color: #e7f6fb;
-  }
-
-  .form-group input {
-    width: 100%;
-    padding: 10px 12px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 6px;
-    color: #fff;
-    font-size: 14px;
-    transition: all 0.2s ease;
-    box-sizing: border-box;
-  }
-
-  .form-group input:focus {
-    outline: none;
-    border-color: rgba(14, 165, 233, 0.6);
-    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
-  }
-
-  .form-group input::placeholder {
-    color: rgba(255, 255, 255, 0.5);
-  }
-
-  .error-message {
-    color: #ef4444;
-    font-size: 10px;
-    margin-top: 4px;
-  }
-
-  .form-buttons {
-    display: flex;
-    gap: 8px;
-    justify-content: flex-end;
-    margin-top: 24px;
-  }
-
-  .btn-cancel {
-    padding: 10px 16px;
-    background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 6px;
-    color: #e7f6fb;
-    cursor: pointer;
-    font-size: 12px;
-    transition: all 0.2s ease;
-  }
-
-  .btn-cancel:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.4);
-  }
-
-  .btn-submit {
-    padding: 10px 16px;
-    background: rgba(14, 165, 233, 0.9);
-    border: none;
-    border-radius: 6px;
-    color: #fff;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 500;
-    transition: all 0.2s ease;
-    min-width: 100px;
-  }
-
-  .btn-submit:hover:not(:disabled) {
-    background: rgba(14, 165, 233, 1);
-    transform: translateY(-1px);
-  }
-
-  .btn-submit:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
-  }
-
-  .form-close {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    background: transparent;
-    border: none;
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 20px;
-    cursor: pointer;
-    width: 28px;
-    height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 4px;
-    transition: all 0.2s ease;
-  }
-
-  .form-close:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: #fff;
-  }
 
 
 
@@ -591,7 +415,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 999;
+    z-index: 10001;
     pointer-events: none;
     transition: all 0.3s ease;
   }
@@ -697,6 +521,111 @@
     border-left-color: #0ea5e9;
   }
 
+  /* Mobile Navbar */
+  .mobile-navbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    background: rgba(2, 15, 18, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(103, 246, 255, 0.3);
+    padding: 8px 16px;
+    z-index: 10000;
+    display: flex;
+    height: 60px;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .mobile-nav-toggle {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.9) 0%, rgba(6, 182, 212, 0.9) 50%, rgba(59, 130, 246, 0.9) 100%);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(15px);
+    box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+    overflow: hidden;
+  }
+
+  .mobile-nav-toggle:hover {
+    transform: translateY(-50%) scale(1.05);
+    box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4);
+  }
+
+  .navbar-text {
+    color: #67f6ff;
+    font-family: 'Apotek Comp', system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    text-shadow: 0 0 8px rgba(103, 246, 255, 0.3);
+    text-align: center;
+    line-height: 1.2;
+    margin: 0 60px;
+  }
+
+  .mobile-nav-toggle .wave-container {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    overflow: hidden;
+  }
+
+  .mobile-nav-toggle .wave {
+    position: absolute;
+    bottom: -5px;
+    left: -50%;
+    width: 200%;
+    height: 12px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    animation: wave-motion 3s ease-in-out infinite;
+  }
+
+  .mobile-nav-toggle .wave1 {
+    animation-delay: 0s;
+    opacity: 0.7;
+  }
+
+  .mobile-nav-toggle .wave2 {
+    animation-delay: 1s;
+    opacity: 0.5;
+    height: 10px;
+  }
+
+  .mobile-nav-toggle .wave3 {
+    animation-delay: 2s;
+    opacity: 0.3;
+    height: 8px;
+  }
+
+  .mobile-nav-toggle .anchor-icon {
+    font-size: 18px;
+    color: #fff;
+    z-index: 2;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  @@keyframes wave-motion {
+    0%, 100% {
+      transform: translateX(0) rotate(0deg);
+    }
+    50% {
+      transform: translateX(5px) rotate(180deg);
+    }
+  }
+
   /* For debugging - uncomment to see hotspot areas */
   /*
   .hotspot {
@@ -713,12 +642,8 @@
   private bool showScript = false;
   private bool showVideo = false;
   private bool showDownloadForm = false;
-  private bool isSubmitting = false;
   private bool isMenuOpen = false;
   private string scriptUrl = "library/SEA GYPSIES COMPLETE SCRIPT MASTER.pdf";
-  private string emailError = "";
-
-  private DownloadFormModel downloadForm = new DownloadFormModel();
 
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {
@@ -749,36 +674,15 @@
   private void ShowDownloadForm()
   {
     showDownloadForm = true;
-    emailError = "";
-    downloadForm = new DownloadFormModel();
   }
 
   private void HideDownloadForm()
   {
     showDownloadForm = false;
-    emailError = "";
-    isSubmitting = false;
   }
 
-  private async Task SubmitDownloadForm()
+  private async Task HandleFormSubmit(DownloadScriptForm.FormModel model)
   {
-    emailError = "";
-
-    if (string.IsNullOrWhiteSpace(downloadForm.Email))
-    {
-      emailError = "Email address is required.";
-      return;
-    }
-
-    if (!IsValidEmail(downloadForm.Email))
-    {
-      emailError = "Please enter a valid email address.";
-      return;
-    }
-
-    isSubmitting = true;
-    StateHasChanged();
-
     try
     {
       await SimulateEmailSending();
@@ -787,12 +691,7 @@
     }
     catch
     {
-      emailError = "An error occurred while sending the script. Please try again.";
-    }
-    finally
-    {
-      isSubmitting = false;
-      StateHasChanged();
+      // TODO: Handle errors - maybe expose an error state in the form component
     }
   }
 
@@ -813,19 +712,6 @@
     }
   }
 
-  private bool IsValidEmail(string email)
-  {
-    try
-    {
-      var addr = new System.Net.Mail.MailAddress(email);
-      return addr.Address == email;
-    }
-    catch
-    {
-      return false;
-    }
-  }
-
   private async Task NavigateHome() => await JSRuntime.InvokeVoidAsync("navigateWithTransition", "/mobile", "right");
 
   private void ToggleMenu()
@@ -843,12 +729,5 @@
   private void CloseMenu()
   {
     isMenuOpen = false;
-  }
-
-  public class DownloadFormModel
-  {
-    public string FirstName { get; set; } = "";
-    public string LastName { get; set; } = "";
-    public string Email { get; set; } = "";
   }
 }

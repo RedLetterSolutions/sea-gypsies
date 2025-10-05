@@ -1,0 +1,159 @@
+@using System.ComponentModel.DataAnnotations
+@inject IJSRuntime JSRuntime
+
+@if (IsOpen)
+{
+    <div class="modal-backdrop" @onclick="HandleBackdropClick" @onkeydown="HandleKeyDown" tabindex="-1">
+        <div class="modal-card" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h1 class="modal-title">DOWNLOAD THE SCRIPT</h1>
+                <div class="expand-icon"></div>
+            </div>
+
+            <p class="modal-subtitle">Enter your information to receive the script via email:</p>
+
+            <EditForm Model="@formModel" OnValidSubmit="@HandleValidSubmit">
+                <DataAnnotationsValidator />
+
+                <div class="form-fields">
+                    @foreach (var field in Fields)
+                    {
+                        <div class="form-field">
+                            <div class="field-label">
+                                <span class="label-text">@field.Label</span>
+                                @if (field.Optional)
+                                {
+                                    <span class="optional-text">(OPTIONAL)</span>
+                                }
+                            </div>
+
+                            @if (field.Key == "FirstName")
+                            {
+                                <InputText @bind-Value="formModel.FirstName"
+                                          type="@field.Type"
+                                          placeholder="@field.Placeholder"
+                                          class="form-input" />
+                                <ValidationMessage For="@(() => formModel.FirstName)" class="validation-message" />
+                            }
+                            else if (field.Key == "LastName")
+                            {
+                                <InputText @bind-Value="formModel.LastName"
+                                          type="@field.Type"
+                                          placeholder="@field.Placeholder"
+                                          class="form-input" />
+                                <ValidationMessage For="@(() => formModel.LastName)" class="validation-message" />
+                            }
+                            else if (field.Key == "Email")
+                            {
+                                <InputText @bind-Value="formModel.Email"
+                                          type="@field.Type"
+                                          placeholder="@field.Placeholder"
+                                          class="form-input" />
+                                <ValidationMessage For="@(() => formModel.Email)" class="validation-message" />
+                            }
+                        </div>
+                    }
+                </div>
+
+                <div class="button-row">
+                    <button type="submit" class="btn-primary">
+                        @if (!string.IsNullOrEmpty(SendIconSrc))
+                        {
+                            <img src="@SendIconSrc" alt="" class="btn-icon" />
+                        }
+                        SEND SCRIPT
+                    </button>
+
+                    <button type="button" class="btn-secondary" @onclick="HandleCancel">
+                        @if (!string.IsNullOrEmpty(CancelIconSrc))
+                        {
+                            <img src="@CancelIconSrc" alt="" class="btn-icon" />
+                        }
+                        CANCEL
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public string? SendIconSrc { get; set; }
+    [Parameter] public string? CancelIconSrc { get; set; }
+    [Parameter] public EventCallback<FormModel> OnSubmit { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private FormModel formModel = new();
+
+    private readonly FieldSpec[] Fields = new[]
+    {
+        new FieldSpec("FirstName", "FIRST NAME", true, "text", "ENTER FIRST NAME"),
+        new FieldSpec("LastName", "LAST NAME", true, "text", "ENTER LAST NAME"),
+        new FieldSpec("Email", "EMAIL ADDRESS", false, "email", "ENTER EMAIL ADDRESS")
+    };
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && IsOpen)
+        {
+            await JSRuntime.InvokeVoidAsync("eval", "document.querySelector('.modal-backdrop').focus()");
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        await OnSubmit.InvokeAsync(formModel);
+    }
+
+    private async Task HandleCancel()
+    {
+        await OnCancel.InvokeAsync();
+    }
+
+    private async Task HandleBackdropClick()
+    {
+        await OnCancel.InvokeAsync();
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+        {
+            await OnCancel.InvokeAsync();
+        }
+    }
+
+    public class FormModel
+    {
+        [MaxLength(100)]
+        public string? FirstName { get; set; }
+
+        [MaxLength(100)]
+        public string? LastName { get; set; }
+
+        [Required, EmailAddress, MaxLength(254)]
+        public string? Email { get; set; }
+    }
+
+    public record FieldSpec(string Key, string Label, bool Optional, string Type, string Placeholder);
+}
+
+@* Usage example for testing:
+<DownloadScriptForm
+    IsOpen="true"
+    SendIconSrc="/img/send-icon.png"
+    CancelIconSrc="/img/cancel-icon.png"
+    OnSubmit="HandleSubmit"
+    OnCancel="HandleCancel" />
+
+@code {
+    private Task HandleSubmit(DownloadScriptForm.FormModel model)
+    {
+        // TODO: wire to backend/email
+        Console.WriteLine($"Submit: {model.FirstName} {model.LastName} {model.Email}");
+        return Task.CompletedTask;
+    }
+    private Task HandleCancel() => Task.CompletedTask;
+}
+*@

@@ -1,0 +1,262 @@
+@font-face {
+  font-family: "Apotek Comp";
+  src: url("/fonts/Apotek-Comp.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+::deep .modal-backdrop {
+  --c-bg: #000000;
+  --c-text: #d7f7ff;
+  --c-accent: #43c9e6;
+  --c-accent-soft: #2d9fba;
+  --c-muted: #7aaab6;
+  --c-danger: #ff5a7a;
+  --radius: 6px;
+  --gap: 18px;
+  --line: 1.5px;
+  --shadow: 0 0 0 1px var(--c-accent) inset, 0 10px 30px rgba(0,0,0,.7);
+  --font: "Apotek Comp", "Oswald", "Teko", "Arial Narrow", system-ui, sans-serif;
+
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+::deep .modal-card {
+  background: var(--c-bg);
+  border: var(--line) solid var(--c-accent);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  width: 100%;
+  max-width: 590px;
+  padding: 32px;
+  font-family: var(--font);
+  color: var(--c-text);
+  position: relative;
+}
+
+@media (max-width: 640px) {
+  ::deep .modal-card {
+    margin: 16px;
+    padding: 24px;
+  }
+}
+
+::deep .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--gap);
+}
+
+::deep .modal-title {
+  font-family: var(--font);
+  font-size: 1.75rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  line-height: 1.1;
+  margin: 0;
+  color: var(--c-text);
+}
+
+::deep .expand-icon {
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--c-muted);
+  border-radius: 2px;
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+::deep .modal-subtitle {
+  font-family: var(--font);
+  font-size: 0.9rem;
+  color: var(--c-muted);
+  margin: 0 0 calc(var(--gap) * 1.5) 0;
+  line-height: 1.4;
+}
+
+::deep .form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  margin-bottom: calc(var(--gap) * 1.5);
+}
+
+::deep .form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+::deep .field-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+::deep .label-text {
+  color: var(--c-text);
+  font-weight: 400;
+}
+
+::deep .optional-text {
+  color: var(--c-muted);
+  font-size: 0.7rem;
+}
+
+::deep .form-input {
+  width: 100%;
+  height: 50px;
+  background: var(--c-bg);
+  border: var(--line) solid var(--c-accent);
+  border-radius: var(--radius);
+  padding: 0 16px;
+  font-family: var(--font);
+  font-size: 0.9rem;
+  color: var(--c-text);
+  text-transform: uppercase;
+  outline: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 0 0 rgba(67, 201, 230, 0);
+}
+
+::deep .form-input::placeholder {
+  color: var(--c-muted);
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+::deep .form-input:focus {
+  border-color: var(--c-accent);
+  filter: brightness(1.2);
+  box-shadow: 0 0 0 2px rgba(67, 201, 230, 0.2), 0 0 8px rgba(67, 201, 230, 0.3);
+}
+
+::deep .form-input:invalid {
+  border-color: var(--c-danger);
+}
+
+::deep .validation-message {
+  font-family: var(--font);
+  font-size: 0.7rem;
+  color: var(--c-danger);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 4px;
+  min-height: 1rem;
+}
+
+::deep .button-row {
+  display: flex;
+  gap: var(--gap);
+  align-items: center;
+}
+
+@media (max-width: 480px) {
+  ::deep .button-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+::deep .btn-primary,
+::deep .btn-secondary {
+  font-family: var(--font);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 14px 24px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  outline: none;
+}
+
+::deep .btn-primary {
+  background: var(--c-bg);
+  border: var(--line) solid var(--c-accent);
+  color: var(--c-text);
+  flex: 1;
+  box-shadow: 0 0 0 0 rgba(67, 201, 230, 0);
+}
+
+::deep .btn-primary:hover,
+::deep .btn-primary:focus {
+  border-color: var(--c-accent);
+  filter: brightness(1.1);
+  transform: scale(1.02);
+  box-shadow: 0 0 0 1px rgba(67, 201, 230, 0.3), 0 0 12px rgba(67, 201, 230, 0.2);
+}
+
+::deep .btn-secondary {
+  background: transparent;
+  border: var(--line) solid var(--c-muted);
+  color: var(--c-muted);
+  flex: 0 0 auto;
+}
+
+::deep .btn-secondary:hover,
+::deep .btn-secondary:focus {
+  border-color: var(--c-accent-soft);
+  color: var(--c-accent-soft);
+}
+
+::deep .btn-icon {
+  width: 16px;
+  height: 16px;
+  filter: brightness(0) saturate(100%) invert(85%) sepia(13%) saturate(1142%) hue-rotate(149deg) brightness(103%) contrast(101%);
+}
+
+::deep .btn-primary .btn-icon {
+  filter: brightness(0) saturate(100%) invert(85%) sepia(13%) saturate(1142%) hue-rotate(149deg) brightness(103%) contrast(101%);
+}
+
+::deep .btn-secondary .btn-icon {
+  filter: brightness(0) saturate(100%) invert(58%) sepia(15%) saturate(1390%) hue-rotate(149deg) brightness(93%) contrast(88%);
+}
+
+/* Focus trap and accessibility */
+::deep .modal-backdrop:focus {
+  outline: none;
+}
+
+/* Subtle scanline effect on card */
+::deep .modal-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(67, 201, 230, 0.02) 25%,
+    rgba(67, 201, 230, 0.01) 50%,
+    rgba(67, 201, 230, 0.02) 75%,
+    transparent 100%
+  );
+  pointer-events: none;
+  border-radius: var(--radius);
+}

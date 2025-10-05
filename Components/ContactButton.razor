@@ -1,0 +1,44 @@
+@using Microsoft.AspNetCore.Components
+
+<button class="contact-btn-fixed @(ShowOutline ? "contact-debug" : string.Empty)" @onclick="OnClick" title="Contact" aria-label="Contact">
+  <img src="@ImageUrl" alt="" onerror="this.style.display='none'; this.parentElement.classList.add('fallback');" />
+  <span class="sr-only">Contact</span>
+</button>
+
+@code {
+  [Parameter] public EventCallback OnClick { get; set; }
+  [Parameter] public string ImageUrl { get; set; } = "/library/contact_button_base.png";
+  [Parameter] public bool ShowOutline { get; set; } = false; // optional debug
+}
+
+<style>
+  .contact-btn-fixed {
+    position: fixed;
+    top: 16px;
+    right: 20px;
+    z-index: 100;
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    line-height: 0;
+  }
+  .contact-btn-fixed img {
+    display: block;
+    height: clamp(28px, 4.6vh, 52px);
+    width: auto;
+  }
+  .contact-btn-fixed:hover { filter: brightness(1.1); }
+
+  /* Fallback if image missing */
+  .contact-btn-fixed.fallback {
+    width: 48px; height: 48px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(56, 189, 248, 0.25));
+    border: 1px solid rgba(56, 189, 248, 0.6);
+  }
+
+  .contact-debug { outline: 1px dashed rgba(255,255,255,0.4); }
+
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 1px, 1px); white-space: nowrap; border: 0; }
+</style>

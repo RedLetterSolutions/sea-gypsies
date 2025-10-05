@@ -1,5 +1,6 @@
 ﻿@page "/desktop"
 @rendermode InteractiveServer
+@using SeaGypsies.Components
 
 <PageTitle>The Sea Gypsies</PageTitle>
 
@@ -20,6 +21,8 @@
          @onmouseenter="ShowGalleryHover" 
          @onmouseleave="ShowDefault"
          @onclick="NavigateToGallery"></div>
+
+    <ContactButton OnClick="OpenContact" />
 </div>
 </div>
 
@@ -136,5 +139,11 @@
     private async Task NavigateToGallery()
     {
         await JSRuntime.InvokeVoidAsync("navigateWithTransition", "/desktop/art", "right");
+    }
+
+    private async Task OpenContact()
+    {
+        // Navigate to Library and open form; the Library page binds the same overlay form
+        await JSRuntime.InvokeVoidAsync("navigateWithTransition", "/desktop/library?openContact=1", "up");
     }
 }
