@@ -58,16 +58,8 @@
         {
             try
             {
-                // Detect if mobile device
-                var isMobile = await JSRuntime.InvokeAsync<bool>("eval", @"
-                    (function() {
-                        const ua = navigator.userAgent || navigator.vendor || '';
-                        const isCoarse = matchMedia('(pointer:coarse)').matches || 'ontouchstart' in window || navigator.maxTouchPoints > 1;
-                        const isMobileUA = /Android|iPhone|iPad|iPod|Mobile|IEMobile|Opera Mini/i.test(ua);
-                        const isSmallScreen = window.innerWidth <= 1100;
-                        return isMobileUA || (isCoarse && isSmallScreen);
-                    })()
-                ");
+                // Detect if mobile device using dedicated function
+                var isMobile = await JSRuntime.InvokeAsync<bool>("detectMobileDevice");
 
                 if (isMobile)
                 {
@@ -78,10 +70,21 @@
                     Navigation.NavigateTo("/desktop", forceLoad: true);
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // Fallback to desktop if detection fails
-                Navigation.NavigateTo("/desktop", forceLoad: true);
+                // Log error and fallback to screen size check
+                Console.WriteLine($"Device detection error: {ex.Message}");
+                try
+                {
+                    // Fallback: check screen width only
+                    var isSmallScreen = await JSRuntime.InvokeAsync<bool>("eval", "window.innerWidth <= 768");
+                    Navigation.NavigateTo(isSmallScreen ? "/mobile" : "/desktop", forceLoad: true);
+                }
+                catch
+                {
+                    // Final fallback to desktop
+                    Navigation.NavigateTo("/desktop", forceLoad: true);
+                }
             }
         }
     }
