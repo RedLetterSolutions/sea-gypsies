@@ -67,6 +67,13 @@
 
     <!-- Navigation buttons disabled on mobile - use hamburger menu and thumbnails instead -->
 
+    <!-- Home button -->
+    <div class="home-button-container">
+        <button class="home-button" @onclick="NavigateToHome">
+            <img src="/library/mobile/mobile_home.png" alt="Home" />
+        </button>
+    </div>
+
     <!-- Thumbnail scroll area (bottom section) -->
     <div class="thumbnail-container">
         <div class="thumbnail-scroll" id="thumbnailScroll" @onwheel="HandleThumbnailScroll" @onwheel:preventDefault="true">
@@ -83,13 +90,6 @@
                 </div>
             }
         </div>
-    </div>
-
-    <!-- Home button -->
-    <div class="home-button-container">
-        <button class="home-button" @onclick="NavigateToHome">
-            <img src="/library/mobile/mobile_home.png" alt="Home" />
-        </button>
     </div>
 </div>
 </div>
@@ -161,11 +161,11 @@
 
     .gallery-logo .gallery-title {
         color: #ffffff;
-        font-family: 'apotek', sans-serif;
-        font-size: 20px;
-        font-weight: 600;
-        letter-spacing: 2px;
-        margin: 8px 0 0 0;
+        font-family: 'apotek-comp', sans-serif;
+        font-size: 45px;
+        font-weight: 400;
+        letter-spacing: 15px;
+        @* margin: 8px 0 0 0; *@
         text-align: center;
         text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
     }
@@ -173,7 +173,7 @@
     /* Gallery Description */
     .gallery-description {
         position: absolute;
-        top: 110px;
+        top: 18vh;
         left: 5%;
         width: 90%;
         z-index: 3;
@@ -182,10 +182,10 @@
 
     .gallery-description p {
         color: #67f6ff;
-        font-family: 'apotek', sans-serif;
-        font-size: 14px;
-        font-weight: 400;
-        margin: 0 0 8px 0;
+        font-family: 'apotek-comp', sans-serif;
+        font-size: 20px;
+        font-weight: 200;
+        margin: 0 0 1px 0;
         padding: 0 10px;
         line-height: 1.4;
         text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
@@ -232,9 +232,9 @@
     .thumbnail-container {
         position: absolute;
         left: 5%;
-        bottom: 10px;
+        bottom: 10px; /* Reset to original bottom positioning */
         width: 90%;
-        height: calc(50vh - 90px); /* Remaining space minus small gap */
+        height: calc(50vh - 90px); /* Reset to original height */
         z-index: 2;
     }
 
@@ -344,10 +344,11 @@
     /* Home Button */
     .home-button-container {
         position: absolute;
-        bottom: 15px;
+        bottom: calc(50vh - 90px - 70px); /* Position below thumbnail container */
         left: 50%;
         transform: translateX(-50%);
-        z-index: 10;
+        z-index: 100;
+        pointer-events: auto; /* Ensure it can receive clicks */
     }
 
     .home-button {
@@ -357,12 +358,16 @@
         cursor: pointer;
         transition: all 0.3s ease;
         opacity: 0.9;
+        position: relative;
+        z-index: 100;
+        touch-action: manipulation;
     }
 
     .home-button img {
         height: 50px;
         width: auto;
         display: block;
+        pointer-events: none;
     }
 
     .home-button:hover {
@@ -467,7 +472,7 @@
         padding: 16px 20px;
         color: #67f6ff;
         text-decoration: none;
-        font-family: 'Apotek Comp', sans-serif;
+        font-family: 'apotek-comp', sans-serif;
         font-size: 16px;
         font-weight: 600;
         transition: all 0.2s ease;
@@ -529,7 +534,7 @@
 
     .navbar-text {
         color: #67f6ff;
-        font-family: 'Apotek Comp', system-ui, -apple-system, sans-serif;
+        font-family: 'apotek-comp', system-ui, -apple-system, sans-serif;
         font-size: 14px;
         font-weight: bold;
         letter-spacing: 1px;
@@ -798,9 +803,27 @@
         isMenuOpen = false;
     }
 
-    private void NavigateToHome()
+    private async Task NavigateToHome()
     {
-        Navigation.NavigateTo("/mobile");
+        try
+        {
+            // Use direct navigation with force reload to ensure it works
+            Navigation.NavigateTo("/mobile", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Navigation error: {ex.Message}");
+            // Fallback to JavaScript navigation
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("eval", "window.location.href = '/mobile'");
+            }
+            catch
+            {
+                // Last resort - use href
+                await JSRuntime.InvokeVoidAsync("eval", "document.location = '/mobile'");
+            }
+        }
     }
 
     private async Task HandleThumbnailScroll(WheelEventArgs e)

@@ -25,6 +25,25 @@
 
 <body>
 
+    <!-- Ambient Music Player -->
+    <audio id="ambientMusic" loop preload="auto">
+        <source src="ambient_music.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <!-- Music Control Button -->
+    <button id="musicToggle" class="music-control" aria-label="Toggle ambient music">
+        <svg id="musicIcon" class="music-icon playing" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Playing Icon (sound waves) -->
+            <path class="wave-icon" d="M3 9V15M7 7V17M11 5V19M15 7V17M19 9V15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <!-- Paused Icon (pause bars) - hidden by default -->
+            <g class="pause-icon" style="display: none;">
+                <rect x="6" y="5" width="4" height="14" fill="currentColor"/>
+                <rect x="14" y="5" width="4" height="14" fill="currentColor"/>
+            </g>
+        </svg>
+    </button>
+
     <div class="page-container">
         <Router AppAssembly="@typeof(App).Assembly">
             <Found Context="routeData">
@@ -50,6 +69,71 @@
 
     <script src="_framework/blazor.server.js"></script>
     <script>
+        // Ambient Music Player
+        window.initAmbientMusic = () => {
+            const audio = document.getElementById('ambientMusic');
+            const toggleBtn = document.getElementById('musicToggle');
+            const musicIcon = document.getElementById('musicIcon');
+            
+            if (!audio || !toggleBtn) return;
+
+            // Set initial volume
+            audio.volume = 0.3;
+
+            // Try to autoplay (may be blocked by browser)
+            const playPromise = audio.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    // Autoplay started successfully
+                    updateMusicIcon(true);
+                }).catch((error) => {
+                    // Autoplay was prevented
+                    console.log('Autoplay prevented, user must interact first');
+                    updateMusicIcon(false);
+                });
+            }
+
+            // Toggle button click handler
+            toggleBtn.addEventListener('click', () => {
+                if (audio.paused) {
+                    audio.play();
+                    updateMusicIcon(true);
+                } else {
+                    audio.pause();
+                    updateMusicIcon(false);
+                }
+            });
+
+            function updateMusicIcon(isPlaying) {
+                const waveIcon = musicIcon.querySelector('.wave-icon');
+                const pauseIcon = musicIcon.querySelector('.pause-icon');
+                
+                if (isPlaying) {
+                    musicIcon.classList.add('playing');
+                    musicIcon.classList.remove('paused');
+                    if (waveIcon) waveIcon.style.display = 'block';
+                    if (pauseIcon) pauseIcon.style.display = 'none';
+                } else {
+                    musicIcon.classList.remove('playing');
+                    musicIcon.classList.add('paused');
+                    if (waveIcon) waveIcon.style.display = 'none';
+                    if (pauseIcon) pauseIcon.style.display = 'block';
+                }
+            }
+
+            // Listen for audio state changes
+            audio.addEventListener('play', () => updateMusicIcon(true));
+            audio.addEventListener('pause', () => updateMusicIcon(false));
+        };
+
+        // Initialize music player when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', window.initAmbientMusic);
+        } else {
+            window.initAmbientMusic();
+        }
+
         // Home page layered background
         window.initHomeBackground = (defaultImage) => {
             const a = document.getElementById('homeBgA');
@@ -215,6 +299,67 @@
 </html>
 
 <style>
+    /* Music Control Button */
+    .music-control {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: rgba(0, 212, 255, 0.2);
+        border: 2px solid #00d4ff;
+        color: #00d4ff;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+    }
+
+    .music-control:hover {
+        background: rgba(0, 212, 255, 0.3);
+        border-color: #00ffff;
+        box-shadow: 0 6px 20px rgba(0, 255, 255, 0.5);
+        transform: scale(1.05);
+    }
+
+    .music-control:active {
+        transform: scale(0.95);
+    }
+
+    .music-icon {
+        width: 28px;
+        height: 28px;
+        transition: all 0.3s ease;
+    }
+
+    .music-icon.playing .wave-icon {
+        animation: soundWave 1s ease-in-out infinite;
+    }
+
+    @@keyframes soundWave {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
+    /* Responsive positioning */
+    @@media (max-width: 768px) {
+        .music-control {
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+        }
+
+        .music-icon {
+            width: 24px;
+            height: 24px;
+        }
+    }
 
     .page-container {
         position: fixed;
@@ -310,6 +455,7 @@
             try
             {
                 await JSRuntime.InvokeVoidAsync("applyPageTransition");
+                await JSRuntime.InvokeVoidAsync("initAmbientMusic");
             }
             catch
             {

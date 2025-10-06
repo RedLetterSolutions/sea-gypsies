@@ -1,5 +1,5 @@
 @font-face {
-  font-family: "Apotek Comp";
+  font-family: "apotek-comp";
   src: url("/fonts/Apotek-Comp.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
@@ -17,7 +17,7 @@
   --gap: 18px;
   --line: 1.5px;
   --shadow: 0 0 0 1px var(--c-accent) inset, 0 10px 30px rgba(0,0,0,.7);
-  --font: "Apotek Comp", "Oswald", "Teko", "Arial Narrow", system-ui, sans-serif;
+  --font: "apotek-comp", "Oswald", "Teko", "Arial Narrow", system-ui, sans-serif;
 
   position: fixed;
   top: 0;

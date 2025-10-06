@@ -56,8 +56,6 @@
     {
         if (firstRender)
         {
-            await Task.Delay(500); // Brief delay for loading animation
-
             try
             {
                 // Detect if mobile device
@@ -73,17 +71,17 @@
 
                 if (isMobile)
                 {
-                    Navigation.NavigateTo("/mobile", replace: true);
+                    Navigation.NavigateTo("/mobile", forceLoad: true);
                 }
                 else
                 {
-                    Navigation.NavigateTo("/desktop", replace: true);
+                    Navigation.NavigateTo("/desktop", forceLoad: true);
                 }
             }
             catch
             {
                 // Fallback to desktop if detection fails
-                Navigation.NavigateTo("/desktop", replace: true);
+                Navigation.NavigateTo("/desktop", forceLoad: true);
             }
         }
     }

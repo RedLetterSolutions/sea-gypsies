@@ -72,7 +72,6 @@
 
     <SeaGypsies.Pages.Desktop.DownloadScriptForm
       IsOpen="@showDownloadForm"
-      BackgroundUrl="/library/SEA GYPSIES WEBSITE  CONTACT FORM.png"
       OnSubmit="@HandleFormSubmit"
       OnCancel="@HideDownloadForm" />
   </div>
@@ -262,6 +261,11 @@
         {
           showDownloadForm = true;
           StateHasChanged();
+          
+          // Remove the query parameter from URL to prevent form from reopening on page reload
+          var uri = new Uri(Navigation.Uri);
+          var cleanUrl = uri.GetLeftPart(UriPartial.Path);
+          Navigation.NavigateTo(cleanUrl, replace: true);
         }
       }
       catch { }

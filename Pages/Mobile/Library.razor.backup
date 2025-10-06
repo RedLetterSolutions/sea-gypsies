@@ -1,0 +1,733 @@
+@page "/mobile/library"
+@rendermode InteractiveServer
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Web
+
+<PageTitle>The Sea Gypsies - Library</PageTitle>
+
+<!-- Mobile Navigation Banner -->
+<div class="mobile-navbar" id="deviceBanner">
+    <button class="mobile-nav-toggle" id="mobileNavToggle" @onclick="ToggleMenu">
+        <div class="wave-container">
+            <div class="wave wave1"></div>
+            <div class="wave wave2"></div>
+            <div class="wave wave3"></div>
+        </div>
+        <div class="anchor-icon">⚓</div>
+    </button>
+    <span class="navbar-text">FOR BEST EXPERIENCE PLEASE VIEW ON A DESKTOP DEVICE</span>
+</div>
+
+<div class="viewport">
+  <div class="library-container">
+
+    <!-- Mobile Navigation Menu -->
+    <div class="nav-menu @(isMenuOpen ? "open" : "")">
+        <div class="nav-overlay" @onclick="CloseMenu"></div>
+        <div class="nav-content">
+            <div class="nav-header">
+                <h2>The Sea Gypsies</h2>
+                <button class="nav-close" @onclick="CloseMenu">×</button>
+            </div>
+            <nav class="nav-links">
+                <a href="/mobile" class="nav-link" @onclick="CloseMenu">
+                    HOME
+                </a>
+                <a href="/mobile/library" class="nav-link active" @onclick="CloseMenu">
+                    LIBRARY
+                </a>
+                <a href="/mobile/art" class="nav-link" @onclick="CloseMenu">
+                    ART GALLERY
+                </a>
+            </nav>
+        </div>
+    </div>
+
+    <div class="library-background">
+      <div class="library-bg-layer" id="libraryBgA"></div>
+      <div class="library-bg-layer" id="libraryBgB"></div>
+    </div>
+
+    <!-- Mobile Library Action Buttons - Only show when no content is active -->
+    @if (!showScript && !showVideo)
+    {
+      <div class="library-content">
+        <div class="library-logo">
+          <img src="logo.png" alt="The Sea Gypsies" class="logo-image" />
+        </div>
+
+        <div class="library-actions">
+          <button class="action-btn read-btn image-btn" @onclick="OpenScript">
+            <img src="library/mobile/read_the_script.png" alt="Read the Script" class="btn-image" />
+          </button>
+
+          <button class="action-btn download-btn image-btn" @onclick="ShowDownloadForm">
+            <img src="library/mobile/download_the_script_button.png" alt="Download the Script" class="btn-image" />
+          </button>
+
+          <button class="action-btn watch-btn image-btn" @onclick="OpenVideo">
+            <img src="library/mobile/watch_the_video.png" alt="Watch the Video" class="btn-image" />
+          </button>
+        </div>
+      </div>
+    }
+
+  <!-- Mobile Video Modal -->
+  @if (showVideo)
+  {
+    <div class="modal-overlay" @onclick="CloseContent">
+      <div class="modal-content video-modal" @onclick:stopPropagation="true">
+        <button class="modal-close" @onclick="CloseContent">×</button>
+        <video class="modal-video" controls autoplay>
+          <source src="library/TSG_Trailer_V3.mp4" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+      </div>
+    </div>
+  }
+
+  <!-- Mobile Script Modal -->
+  @if (showScript)
+  {
+    <div class="modal-overlay" @onclick="CloseContent">
+      <div class="modal-content script-modal" @onclick:stopPropagation="true">
+        <button class="modal-close" @onclick="CloseContent">×</button>
+        <div class="modal-header">
+          <h3>The Sea Gypsies Script</h3>
+          <button class="download-script-btn" @onclick="ShowDownloadForm">Download Script</button>
+        </div>
+        <iframe class="modal-pdf" src="@scriptUrl#toolbar=0&navpanes=0&scrollbar=0" title="Script PDF"></iframe>
+        <div class="pdf-fallback"><a href="@scriptUrl" target="_blank" rel="noopener">Open PDF in new tab</a></div>
+      </div>
+    </div>
+  }
+
+    <DownloadScriptForm
+      IsOpen="@showDownloadForm"
+      OnSubmit="@HandleFormSubmit"
+      OnCancel="@HideDownloadForm" />
+  </div>
+</div>
+
+<style>
+  html, body, #app {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background: #000;
+    overflow: hidden;
+    position: fixed; /* Prevent any scrolling behavior */
+    width: 100%;
+  }
+
+  .viewport {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    padding-top: 60px; /* Space for global navbar */
+    background: #000; /* Ensure black background for any overflow areas */
+  }
+
+  .library-container {
+    position: relative;
+    width: 100vw;
+    height: calc(100vh - 60px);
+    overflow: hidden;
+    background: #000; /* Fallback background */
+  }
+
+  .library-background {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: #000; /* Ensure consistent background */
+  }
+  .library-bg-layer {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0;
+    transition: none;
+  }
+
+  .hotspot {
+    position: absolute;
+    cursor: pointer;
+    z-index: 10;
+  }
+
+  /* Mobile Library Content Container */
+  .library-content {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    z-index: 25;
+    width: 90%;
+    max-width: 320px;
+  }
+
+  /* Logo styling */
+  .library-logo {
+    text-align: center;
+  }
+
+  .logo-image {
+    width: 100%;
+    max-width: 280px;
+    height: auto;
+    opacity: 0.9;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+  }
+
+  /* Mobile Library Action Buttons */
+  .library-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+  }
+
+  .action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 16px 24px;
+    background: rgba(2, 15, 18, 0.85);
+    border: 2px solid rgba(14, 165, 233, 0.6);
+    border-radius: 12px;
+    color: #e7f6fb;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  }
+
+  .action-btn:hover, .action-btn:active {
+    background: rgba(14, 165, 233, 0.2);
+    border-color: rgba(14, 165, 233, 0.8);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(14, 165, 233, 0.2);
+  }
+
+  .btn-icon {
+    font-size: 20px;
+  }
+
+  .btn-text {
+    flex: 1;
+    text-align: center;
+  }
+
+  /* Different colors for each button */
+  .read-btn {
+    border-color: rgba(34, 197, 94, 0.6);
+  }
+
+  .read-btn:hover, .read-btn:active {
+    background: rgba(34, 197, 94, 0.2);
+    border-color: rgba(34, 197, 94, 0.8);
+    box-shadow: 0 6px 20px rgba(34, 197, 94, 0.2);
+  }
+
+  .download-btn {
+    border-color: rgba(245, 158, 11, 0.6);
+  }
+
+  .download-btn:hover, .download-btn:active {
+    background: rgba(245, 158, 11, 0.2);
+    border-color: rgba(245, 158, 11, 0.8);
+    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.2);
+  }
+
+  .watch-btn {
+    border-color: rgba(239, 68, 68, 0.6);
+  }
+
+  .watch-btn:hover, .watch-btn:active {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.8);
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.2);
+  }
+
+  /* Image button styling */
+  .image-btn {
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .image-btn:hover, .image-btn:active {
+    background: transparent;
+    border: none;
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  }
+
+  .btn-image {
+    width: 100%;
+    height: auto;
+    max-width: 320px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    display: block;
+    margin: 0 auto;
+  }
+
+  /* Mobile Modal Styles */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10001; /* Higher than navbar (10000) */
+    backdrop-filter: blur(4px);
+    padding: 80px 20px 20px 20px; /* Top padding to clear navbar */
+  }
+
+  .modal-content {
+    position: relative;
+    width: 95%;
+    max-width: 800px;
+    height: 85vh;
+    max-height: 600px;
+    display: flex;
+    flex-direction: column;
+    background: rgba(2, 15, 18, 0.9);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+  }
+
+  .modal-close {
+    position: absolute;
+    top: -50px;
+    right: 10px;
+    background: rgba(239, 68, 68, 0.9);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: #fff;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  }
+
+  .modal-close:hover {
+    background: rgba(239, 68, 68, 1);
+    transform: scale(1.1);
+    border-color: rgba(255, 255, 255, 0.5);
+  }
+
+  /* Video Modal */
+  .video-modal {
+    background: #000;
+  }
+
+  .modal-video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 12px;
+  }
+
+  /* Script Modal */
+  .script-modal {
+    background: rgba(2, 15, 18, 0.95);
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 0 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .modal-header h3 {
+    color: #e7f6fb;
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .modal-pdf {
+    flex: 1;
+    width: 100%;
+    border: 0;
+    border-radius: 8px;
+    background: #0a0f12;
+    min-height: 0;
+  }
+  .pdf-fallback { position: absolute; bottom: 6px; right: 10px; font-size: 10px; opacity: 0.8; }
+
+  .download-script-btn {
+    background: rgba(14, 165, 233, 0.9);
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .download-script-btn:hover {
+    background: rgba(14, 165, 233, 1);
+    transform: translateY(-1px);
+  }
+
+
+
+
+  /* Navigation Menu */
+  .nav-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10001;
+    pointer-events: none;
+    transition: all 0.3s ease;
+  }
+
+  .nav-menu.open {
+    pointer-events: all;
+  }
+
+  .nav-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    backdrop-filter: blur(4px);
+  }
+
+  .nav-menu.open .nav-overlay {
+    opacity: 1;
+  }
+
+  .nav-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 280px;
+    height: 100%;
+    background: linear-gradient(180deg, rgba(2, 15, 18, 0.95) 0%, rgba(12, 35, 41, 0.95) 100%);
+    border-right: 2px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+  }
+
+  .nav-menu.open .nav-content {
+    transform: translateX(0);
+  }
+
+  .nav-header {
+    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .nav-header h2 {
+    color: #e7f6fb;
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .nav-close {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 24px;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+  }
+
+  .nav-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+  }
+
+  .nav-links {
+    padding: 20px 0;
+  }
+
+  .nav-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 20px;
+    color: #67f6ff;
+    text-decoration: none;
+    font-family: 'apotek-comp', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+  }
+
+  .nav-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #e7f6fb;
+    border-left-color: rgba(14, 165, 233, 0.6);
+  }
+
+  .nav-link.active {
+    background: rgba(14, 165, 233, 0.2);
+    color: #fff;
+    border-left-color: #0ea5e9;
+  }
+
+  /* Mobile Navbar */
+  .mobile-navbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    background: rgba(2, 15, 18, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(103, 246, 255, 0.3);
+    padding: 8px 16px;
+    z-index: 10000;
+    display: flex;
+    height: 60px;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .mobile-nav-toggle {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.9) 0%, rgba(6, 182, 212, 0.9) 50%, rgba(59, 130, 246, 0.9) 100%);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(15px);
+    box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+    overflow: hidden;
+  }
+
+  .mobile-nav-toggle:hover {
+    transform: translateY(-50%) scale(1.05);
+    box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4);
+  }
+
+  .navbar-text {
+    color: #67f6ff;
+    font-family: 'apotek-comp', system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    text-shadow: 0 0 8px rgba(103, 246, 255, 0.3);
+    text-align: center;
+    line-height: 1.2;
+    margin: 0 60px;
+  }
+
+  .mobile-nav-toggle .wave-container {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    overflow: hidden;
+  }
+
+  .mobile-nav-toggle .wave {
+    position: absolute;
+    bottom: -5px;
+    left: -50%;
+    width: 200%;
+    height: 12px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    animation: wave-motion 3s ease-in-out infinite;
+  }
+
+  .mobile-nav-toggle .wave1 {
+    animation-delay: 0s;
+    opacity: 0.7;
+  }
+
+  .mobile-nav-toggle .wave2 {
+    animation-delay: 1s;
+    opacity: 0.5;
+    height: 10px;
+  }
+
+  .mobile-nav-toggle .wave3 {
+    animation-delay: 2s;
+    opacity: 0.3;
+    height: 8px;
+  }
+
+  .mobile-nav-toggle .anchor-icon {
+    font-size: 18px;
+    color: #fff;
+    z-index: 2;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  @@keyframes wave-motion {
+    0%, 100% {
+      transform: translateX(0) rotate(0deg);
+    }
+    50% {
+      transform: translateX(5px) rotate(180deg);
+    }
+  }
+
+  /* For debugging - uncomment to see hotspot areas */
+  /*
+  .hotspot {
+    border: 2px solid rgba(255, 255, 0, 0.8) !important;
+    background: rgba(255, 255, 0, 0.3) !important;
+  }
+  */
+</style>
+
+@code {
+  [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+  [Inject] private NavigationManager Navigation { get; set; } = default!;
+
+  private bool showScript = false;
+  private bool showVideo = false;
+  private bool showDownloadForm = false;
+  private bool isMenuOpen = false;
+  private string scriptUrl = "library/SEA GYPSIES COMPLETE SCRIPT MASTER.pdf";
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (firstRender)
+    {
+      try
+      {
+        await JSRuntime.InvokeVoidAsync("initLibraryBackground", "gallery/backgrounds/mobile_background.jpg");
+        var imgs = new[] {
+          "gallery/backgrounds/mobile_background.jpg",
+          "library/library_download_script.png",
+          "library/library_home.png"
+        };
+        await JSRuntime.InvokeVoidAsync("preloadImages", imgs);
+
+        // Connect to global navbar menu toggle
+        await JSRuntime.InvokeVoidAsync("addMobileMenuListener", DotNetObjectReference.Create(this));
+      }
+      catch { }
+    }
+  }
+
+
+  private void OpenScript() { showVideo = false; showScript = true; }
+  private void OpenVideo() { showScript = false; showVideo = true; }
+  private void CloseContent() { showScript = false; showVideo = false; }
+
+  private void ShowDownloadForm()
+  {
+    showDownloadForm = true;
+  }
+
+  private void HideDownloadForm()
+  {
+    showDownloadForm = false;
+  }
+
+  private async Task HandleFormSubmit(DownloadScriptForm.FormModel model)
+  {
+    try
+    {
+      await SimulateEmailSending();
+      HideDownloadForm();
+      await ShowSuccessMessage();
+    }
+    catch
+    {
+      // TODO: Handle errors - maybe expose an error state in the form component
+    }
+  }
+
+  private async Task SimulateEmailSending()
+  {
+    await Task.Delay(2000);
+  }
+
+  private async Task ShowSuccessMessage()
+  {
+    try
+    {
+      await JSRuntime.InvokeVoidAsync("alert", "Script sent successfully! Please check your email.");
+    }
+    catch
+    {
+      // Fallback if JS alert fails
+    }
+  }
+
+  private async Task NavigateHome() => await JSRuntime.InvokeVoidAsync("navigateWithTransition", "/mobile", "right");
+
+  private void ToggleMenu()
+  {
+    isMenuOpen = !isMenuOpen;
+  }
+
+  [JSInvokable]
+  public void ToggleMenuFromJS()
+  {
+    ToggleMenu();
+    StateHasChanged();
+  }
+
+  private void CloseMenu()
+  {
+    isMenuOpen = false;
+  }
+}
