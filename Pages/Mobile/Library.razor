@@ -80,7 +80,7 @@
 }
 
 <!-- Download Script Form Modal -->
-<DownloadScriptForm 
+<SeaGypsies.Pages.Desktop.DownloadScriptForm
     IsOpen="@showDownloadFormModal"
     OnCancel="@CloseDownloadForm"
     OnSubmit="@HandleFormSubmit" />
@@ -96,7 +96,7 @@
             </div>
             <div class="video-container">
                 <video controls autoplay playsinline class="video-player">
-                    <source src="/library/SEA GYPSIES VIDEO.mp4" type="video/mp4">
+                    <source src="/library/TSG_Trailer_V3.mp4" type="video/mp4">
                     Your browser does not support the video tag.
                 </video>
             </div>
@@ -572,12 +572,13 @@
         showDownloadFormModal = true;
     }
 
-    private void CloseDownloadForm()
+    private Task CloseDownloadForm()
     {
         showDownloadFormModal = false;
+        return Task.CompletedTask;
     }
 
-    private async Task HandleFormSubmit(DownloadScriptForm.FormModel model)
+    private async Task HandleFormSubmit(SeaGypsies.Pages.Desktop.DownloadScriptForm.FormModel model)
     {
         // Handle form submission - you can send email or process the data here
         Console.WriteLine($"Form submitted: {model.FirstName} {model.LastName} {model.Email}");

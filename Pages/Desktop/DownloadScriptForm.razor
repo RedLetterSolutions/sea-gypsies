@@ -6,10 +6,7 @@
   <div class="df-overlay" @onclick="HandleOverlayClick">
     <div class="df-container" @onclick:stopPropagation="true">
       <button class="df-close" @onclick="OnCancel" aria-label="Close">
-        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="2" y="2" width="28" height="28" stroke="currentColor" stroke-width="2"/>
-          <path d="M10 10L22 22M22 10L10 22" stroke="currentColor" stroke-width="2" stroke-linecap="square"/>
-        </svg>
+        <img src="/button_icon.png" alt="" />
       </button>
 
       <div class="df-content">
@@ -53,10 +50,7 @@
 
             <div class="df-button-row">
               <button type="submit" class="df-btn df-send" aria-label="Send Script" disabled="@isSubmitting">
-                <svg class="df-btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect x="2" y="2" width="20" height="20" stroke="currentColor" stroke-width="2"/>
-                  <circle cx="12" cy="12" r="4" fill="currentColor"/>
-                </svg>
+                <img src="/button_icon.png" alt="" class="df-btn-icon" />
                 SEND SCRIPT
               </button>
               <button type="button" class="df-btn df-cancel" aria-label="Cancel" @onclick="OnCancel">
@@ -118,7 +112,7 @@
   .df-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.75);
+    background: rgba(0, 0, 0, 0.5);
     display: grid;
     place-items: center;
     z-index: 1000;
@@ -129,7 +123,7 @@
   .df-container {
     position: relative;
     width: clamp(600px, 50vw, 768px);
-    background: rgba(0, 0, 0, 0.95);
+    background: rgba(0, 0, 0, 0.7);
     border: 3px solid #00d4ff;
     box-shadow: 
       0 0 20px rgba(0, 212, 255, 0.4),
@@ -173,10 +167,10 @@
 
   /* Title styling */
   .df-title {
-    font-family: 'Courier New', Courier, monospace;
+    font-family: 'apotek', sans-serif;
     font-size: clamp(24px, 2.5vw, 32px);
     font-weight: 700;
-    letter-spacing: 0.15em;
+    letter-spacing: 0.4em;
     color: #ffffff;
     margin: 0 0 16px 0;
     text-align: left;
@@ -184,8 +178,8 @@
 
   /* Subtitle */
   .df-subtitle {
-    font-family: 'Courier New', Courier, monospace;
-    font-size: clamp(12px, 1.1vw, 14px);
+    font-family: 'apotek', sans-serif;
+    font-size: clamp(20px, 1.1vw, 14px);
     color: #00d4ff;
     margin: 0 0 40px 0;
     text-align: left;
@@ -207,7 +201,7 @@
 
   /* Label styling */
   .df-label {
-    font-family: 'Courier New', Courier, monospace;
+    font-family: 'apotek', sans-serif;
     font-size: clamp(11px, 1vw, 13px);
     font-weight: 600;
     letter-spacing: 0.08em;
@@ -219,6 +213,7 @@
 
   .df-label-text {
     color: #ffffff;
+    letter-spacing: 0.3em;
   }
 
   .df-optional {
@@ -232,7 +227,7 @@
     background: rgba(0, 0, 0, 0.6);
     border: 2px solid #00d4ff;
     color: #00d4ff;
-    font-family: 'Courier New', Courier, monospace;
+    font-family: 'apotek', sans-serif;
     font-size: clamp(13px, 1.2vw, 16px);
     font-weight: 500;
     letter-spacing: 0.05em;
@@ -258,7 +253,7 @@
   /* Error message */
   .df-error {
     color: #ff4444;
-    font-family: 'Courier New', Courier, monospace;
+    font-family: 'apotek', sans-serif;
     font-size: 12px;
     margin-top: -12px;
   }
@@ -272,7 +267,7 @@
 
   /* Button base styles */
   .df-btn {
-    font-family: 'Courier New', Courier, monospace;
+    font-family: 'apotek', sans-serif;
     font-size: clamp(13px, 1.2vw, 15px);
     font-weight: 700;
     letter-spacing: 0.12em;
@@ -289,7 +284,7 @@
   /* Send button */
   .df-send {
     background: #00d4ff;
-    color: #000000;
+    color: #ffffff;
     border-color: #00d4ff;
     flex: 0 0 auto;
   }
