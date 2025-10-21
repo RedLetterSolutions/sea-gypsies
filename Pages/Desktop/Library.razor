@@ -72,7 +72,6 @@
 
     <SeaGypsies.Pages.Desktop.DownloadScriptForm
       IsOpen="@showDownloadForm"
-      OnSubmit="@HandleFormSubmit"
       OnCancel="@HideDownloadForm" />
   </div>
 </div>
@@ -241,6 +240,7 @@
   private bool showVideo = false;
   private bool showDownloadForm = false;
   private string scriptUrl = "library/SEA GYPSIES COMPLETE SCRIPT MASTER.pdf";
+  private DotNetObjectReference<Library>? _selfRef;
 
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {
@@ -248,6 +248,9 @@
     {
       try
       {
+        // Register this page instance so JS can close the modal on success
+        _selfRef = DotNetObjectReference.Create(this);
+        await JSRuntime.InvokeVoidAsync("setDownloadFormPageRef", _selfRef);
         await JSRuntime.InvokeVoidAsync("initLibraryBackground", "library/library_default.png");
         var imgs = new[] {
           "library/library_default.png",
@@ -302,41 +305,11 @@
     showDownloadForm = false;
   }
 
-  private async Task HandleFormSubmit(DownloadScriptForm.FormModel model)
+  [JSInvokable]
+  public void CloseDownloadFormFromJS()
   {
-    try
-    {
-      // TODO: Add backend API call here to send the script via email
-      await SimulateEmailSending();
-
-      // Show success message (for now just hide the form)
-      HideDownloadForm();
-
-      // TODO: Show success notification to user
-      await ShowSuccessMessage();
-    }
-    catch
-    {
-      // TODO: Handle errors - maybe expose an error state in the form component
-    }
-  }
-
-  private async Task SimulateEmailSending()
-  {
-    // Simulate API call delay
-    await Task.Delay(2000);
-  }
-
-  private async Task ShowSuccessMessage()
-  {
-    try
-    {
-      await JSRuntime.InvokeVoidAsync("alert", "Script sent successfully! Please check your email.");
-    }
-    catch
-    {
-      // Fallback if JS alert fails
-    }
+    showDownloadForm = false;
+    StateHasChanged();
   }
 
   private async Task NavigateHome() => await JSRuntime.InvokeVoidAsync("navigateWithTransition", "/desktop", "right");

@@ -13,9 +13,16 @@
         <h1 class="df-title">DOWNLOAD THE SCRIPT</h1>
         <p class="df-subtitle">Enter your information to receive the script via email:</p>
 
-        <EditForm Model="model" OnValidSubmit="SubmitInternal">
-          <DataAnnotationsValidator />
-          
+  <form data-rls-contact="sea_gypsies" data-rls-redirect="false" id="seaGypsiesForm" data-rls-on-success="handleContactSuccess" data-rls-on-error="handleContactError">
+          <!-- Honeypot (spam protection) -->
+          <input type="text" name="_hp" style="display:none;" tabindex="-1" autocomplete="off">
+
+          <!-- Hidden message field -->
+          <input type="hidden" name="message" value="Please send me the Sea Gypsies script.">
+
+          <!-- Hidden combined name field -->
+          <input type="hidden" name="name" id="hiddenName" value="">
+
           <div class="df-form">
             <div class="df-field">
               <label class="df-label">
@@ -23,7 +30,7 @@
                 <span class="df-optional">(OPTIONAL)</span>
               </label>
               <input class="df-input" type="text" placeholder="ENTER FIRST NAME"
-                     @bind="model.FirstName" autocomplete="given-name" />
+                     id="firstNameInput" autocomplete="given-name">
             </div>
 
             <div class="df-field">
@@ -32,33 +39,28 @@
                 <span class="df-optional">(OPTIONAL)</span>
               </label>
               <input class="df-input" type="text" placeholder="ENTER LAST NAME"
-                     @bind="model.LastName" autocomplete="family-name" />
+                     id="lastNameInput" autocomplete="family-name">
             </div>
 
             <div class="df-field">
               <label class="df-label">
                 <span class="df-label-text">EMAIL ADDRESS</span>
               </label>
-              <input class="df-input" type="email" placeholder="ENTER EMAIL ADDRESS" required
-                     @bind="model.Email" autocomplete="email" />
+              <input class="df-input" type="email" placeholder="ENTER EMAIL ADDRESS"
+                     name="email" autocomplete="email" required>
             </div>
 
-            @if (!string.IsNullOrEmpty(Error))
-            {
-              <div class="df-error">@Error</div>
-            }
-
             <div class="df-button-row">
-              <button type="submit" class="df-btn df-send" aria-label="Send Script" disabled="@isSubmitting">
+              <button type="submit" class="df-btn df-send" aria-label="Send Script">
                 <img src="/button_icon.png" alt="" class="df-btn-icon" />
-                SEND SCRIPT
+                <span>SEND SCRIPT</span>
               </button>
               <button type="button" class="df-btn df-cancel" aria-label="Cancel" @onclick="OnCancel">
                 CANCEL
               </button>
             </div>
           </div>
-        </EditForm>
+        </form>
       </div>
     </div>
   </div>
@@ -66,44 +68,35 @@
 
 @code {
   [Parameter] public bool IsOpen { get; set; }
-  [Parameter] public EventCallback<FormModel> OnSubmit { get; set; }
   [Parameter] public EventCallback OnCancel { get; set; }
   [Inject] private NavigationManager Nav { get; set; } = default!;
+  [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+  private bool _initForOpen;
 
-  private bool isSubmitting;
-  private string Error = string.Empty;
-  private FormModel model = new();
-
-  private async Task SubmitInternal()
+  protected override async Task OnAfterRenderAsync(bool firstRender)
   {
-    Error = string.Empty;
-    if (string.IsNullOrWhiteSpace(model.Email))
+    if (IsOpen && !_initForOpen)
     {
-      Error = "Email address is required.";
-      return;
+      try
+      {
+        await JSRuntime.InvokeVoidAsync("initSeaGypsiesContactForm");
+        await JSRuntime.InvokeVoidAsync("bindRLSOnce");
+        _initForOpen = true;
+      }
+      catch (Exception ex)
+      {
+        Console.WriteLine($"Error initializing form: {ex.Message}");
+      }
     }
-
-    isSubmitting = true;
-    try
+    else if (!IsOpen && _initForOpen)
     {
-      await OnSubmit.InvokeAsync(model);
-    }
-    finally
-    {
-      isSubmitting = false;
+      _initForOpen = false; // reset for next open
     }
   }
 
   private async Task HandleOverlayClick()
   {
     await OnCancel.InvokeAsync();
-  }
-
-  public class FormModel
-  {
-    public string FirstName { get; set; } = string.Empty;
-    public string LastName  { get; set; } = string.Empty;
-    public string Email     { get; set; } = string.Empty;
   }
 }
 
@@ -117,6 +110,8 @@
     place-items: center;
     z-index: 1000;
     backdrop-filter: blur(8px);
+    /* Add safe margins so the form doesn't touch the top bar or bottom FAB on mobile */
+    padding: calc(env(safe-area-inset-top) + 20px) 16px calc(env(safe-area-inset-bottom) + 28px) 16px;
   }
 
   /* Form container - recreating the cyan-bordered design */
@@ -125,10 +120,15 @@
     width: clamp(600px, 50vw, 768px);
     background: rgba(0, 0, 0, 0.7);
     border: 3px solid #00d4ff;
-    box-shadow: 
+    box-shadow:
       0 0 20px rgba(0, 212, 255, 0.4),
       inset 0 0 40px rgba(0, 212, 255, 0.05);
     padding: 0;
+    font-family: 'apotek-comp', system-ui, -apple-system, sans-serif;
+    /* Ensure the form never exceeds the viewport and can scroll internally on small devices */
+    max-height: calc(100dvh - (env(safe-area-inset-top) + 20px) - (env(safe-area-inset-bottom) + 28px) - 32px);
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   /* Close button - top right with custom icon */
@@ -167,19 +167,22 @@
 
   /* Title styling */
   .df-title {
-    font-family: 'apotek', sans-serif;
-    font-size: clamp(24px, 2.5vw, 32px);
-    font-weight: 700;
-    letter-spacing: 0.4em;
+    font-family: 'apotek-comp', system-ui, -apple-system, sans-serif;
+    font-size: clamp(32px, 3vw, 40px);
+    font-weight: 100;
+    letter-spacing: 15px;
+    text-transform: uppercase;
     color: #ffffff;
-    margin: 0 0 16px 0;
+    margin: 0 0 5px 0;
     text-align: left;
   }
 
   /* Subtitle */
   .df-subtitle {
-    font-family: 'apotek', sans-serif;
-    font-size: clamp(20px, 1.1vw, 14px);
+    font-family: 'apotek-comp', system-ui, -apple-system, sans-serif;
+    font-size: clamp(16px, 1.5vw, 25px);
+    font-weight: 300;
+    letter-spacing: 3px;
     color: #00d4ff;
     margin: 0 0 40px 0;
     text-align: left;
@@ -187,6 +190,7 @@
 
   /* Form layout */
   .df-form {
+    font-family: 'apotek-comp', system-ui, -apple-system, sans-serif;
     display: flex;
     flex-direction: column;
     gap: 24px;
@@ -201,10 +205,11 @@
 
   /* Label styling */
   .df-label {
-    font-family: 'apotek', sans-serif;
-    font-size: clamp(11px, 1vw, 13px);
-    font-weight: 600;
-    letter-spacing: 0.08em;
+    font-family: 'apotek-comp', system-ui, -apple-system, sans-serif;
+    font-size: clamp(10px, 1.5vw, 25px);
+    font-weight: 300;
+    letter-spacing: 10px;
+    text-transform: uppercase;
     color: #ffffff;
     display: flex;
     align-items: center;
@@ -212,13 +217,18 @@
   }
 
   .df-label-text {
+    font-family: 'apotek-comp', system-ui, -apple-system, sans-serif;
     color: #ffffff;
-    letter-spacing: 0.3em;
+    letter-spacing: 10px;
+    text-transform: uppercase;
   }
 
   .df-optional {
+    font-family: 'apotek-comp', system-ui, -apple-system, sans-serif;
     color: #00d4ff;
-    font-weight: 400;
+    font-weight: 300;
+    letter-spacing: 6px;
+    text-transform: uppercase;
   }
 
   /* Input field styling */
@@ -227,10 +237,11 @@
     background: rgba(0, 0, 0, 0.6);
     border: 2px solid #00d4ff;
     color: #00d4ff;
-    font-family: 'apotek', sans-serif;
-    font-size: clamp(13px, 1.2vw, 16px);
-    font-weight: 500;
-    letter-spacing: 0.05em;
+    font-family: 'apotek-comp', system-ui, -apple-system, sans-serif;
+    font-size: clamp(15px, 1.4vw, 18px);
+    font-weight: 300;
+    letter-spacing: 3px;
+    text-transform: uppercase;
     padding: 16px 20px;
     box-sizing: border-box;
     outline: none;
@@ -238,8 +249,11 @@
   }
 
   .df-input::placeholder {
+    font-family: 'apotek-comp', system-ui, -apple-system, sans-serif;
     color: rgba(0, 212, 255, 0.5);
-    font-weight: 400;
+    font-weight: 300;
+    letter-spacing: 3px;
+    text-transform: uppercase;
   }
 
   .df-input:focus {
@@ -253,8 +267,9 @@
   /* Error message */
   .df-error {
     color: #ff4444;
-    font-family: 'apotek', sans-serif;
+    font-family: 'apotek-comp', system-ui, -apple-system, sans-serif;
     font-size: 12px;
+    letter-spacing: 1px;
     margin-top: -12px;
   }
 
@@ -267,10 +282,11 @@
 
   /* Button base styles */
   .df-btn {
-    font-family: 'apotek', sans-serif;
-    font-size: clamp(13px, 1.2vw, 15px);
-    font-weight: 700;
-    letter-spacing: 0.12em;
+    font-family: 'apotek-comp', system-ui, -apple-system, sans-serif;
+    font-size: clamp(15px, 1.4vw, 17px);
+    font-weight: 400;
+    letter-spacing: 4px;
+    text-transform: uppercase;
     padding: 14px 28px;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -283,9 +299,11 @@
 
   /* Send button */
   .df-send {
-    background: #00d4ff;
+    background: #34818e;
     color: #ffffff;
     border-color: #00d4ff;
+    font-weight: 300;
+    letter-spacing: 8px;
     flex: 0 0 auto;
   }
 
@@ -309,8 +327,11 @@
   /* Cancel button */
   .df-cancel {
     background: transparent;
-    color: #00d4ff;
-    border-color: #00d4ff;
+    color: #12506e;
+    border-color: #12506e;
+    font-weight: 300;
+    letter-spacing: 6px;
+    margin-left: auto;
     flex: 0 0 auto;
   }
 
@@ -322,9 +343,40 @@
 
   /* Responsive adjustments */
   @@media (max-width: 768px) {
-    .df-content {
-      padding: 40px 40px 30px 40px;
+    /* tighten overall layout and add a touch more outer padding on smaller screens */
+    .df-overlay {
+      padding: calc(env(safe-area-inset-top) + 24px) 16px calc(env(safe-area-inset-bottom) + 36px) 16px;
     }
+
+    .df-container {
+      /* leave a little more headroom/footroom on mid-size mobiles */
+      max-height: calc(100dvh - (env(safe-area-inset-top) + 24px) - (env(safe-area-inset-bottom) + 36px) - 24px);
+      width: 90vw;
+      max-width: 560px;
+    }
+
+    .df-content {
+      padding: 24px 20px 16px 20px;
+    }
+
+    .df-form { gap: 16px; }
+    .df-field { gap: 6px; }
+
+    .df-input { padding: 12px 16px; }
+
+    .df-button-row { margin-top: 8px; }
+
+    .df-btn { padding: 12px 18px; }
+
+    .df-subtitle { margin: 0 0 20px 0; }
+
+    /* Reduce label letter-spacing ~50% on mobile/tablet */
+    .df-title { letter-spacing: 5px; }
+    .df-subtitle { letter-spacing: 2px; }
+    .df-label { letter-spacing: 5px; font-size: clamp(18px, 2vw, 25px); }
+    .df-label-text { letter-spacing: 5px; }
+    .df-optional { letter-spacing: 3px; }
+    .df-send { letter-spacing: 4px; font-size: clamp(20px, 1.5vw, 30px); }
 
     .df-button-row {
       flex-direction: column;
@@ -337,12 +389,25 @@
 
   @@media (max-width: 480px) {
     .df-container {
-      width: 95vw;
-      max-width: 95vw;
+      width: 90vw;
+      max-width: 90vw;
+      /* extra breathing room on very small screens */
+      max-height: calc(100dvh - (env(safe-area-inset-top) + 28px) - (env(safe-area-inset-bottom) + 44px) - 16px);
     }
 
     .df-content {
-      padding: 30px 24px;
+      padding: 20px 16px 14px 16px;
     }
+
+    .df-form { gap: 14px; }
+    .df-input { padding: 10px 14px; }
+    .df-btn { padding: 10px 16px; }
+    .df-button-row { gap: 12px; margin-top: 8px; }
+    .df-subtitle { margin: 0 0 16px 0; }
+
+    /* Keep the reduced spacing on smaller phones as well */
+    .df-label { letter-spacing: 5px; }
+    .df-label-text { letter-spacing: 5px; }
+    .df-optional { letter-spacing: 3px; }
   }
 </style>

@@ -7,41 +7,18 @@
 <!-- Mobile Navigation Banner -->
 <div class="mobile-navbar" id="deviceBanner">
     <button class="mobile-nav-toggle" id="mobileNavToggle" @onclick="ToggleMenu">
-        <div class="wave-container">
-            <div class="wave wave1"></div>
-            <div class="wave wave2"></div>
-            <div class="wave wave3"></div>
+        <div class="hamburger-icon">
+            <span></span>
+            <span></span>
+            <span></span>
         </div>
-        <div class="anchor-icon">⚓</div>
     </button>
     <span class="navbar-text">FOR BEST EXPERIENCE PLEASE VIEW ON A DESKTOP DEVICE</span>
 </div>
 
 <div class="viewport">
+    <div class="overflow-bg-blur" aria-hidden="true"></div>
     <div class="library-container">
-
-        <!-- Mobile Navigation Menu -->
-        <div class="nav-menu @(isMenuOpen ? "open" : "")">
-            <div class="nav-overlay" @onclick="CloseMenu"></div>
-            <div class="nav-content">
-                <div class="nav-header">
-                    <h2>The Sea Gypsies</h2>
-                    <button class="nav-close" @onclick="CloseMenu">×</button>
-                </div>
-                <nav class="nav-links">
-                    <a href="/mobile" class="nav-link" @onclick="CloseMenu">
-                        HOME
-                    </a>
-                    <a href="/mobile/library" class="nav-link active" @onclick="CloseMenu">
-                        LIBRARY
-                    </a>
-                    <a href="/mobile/art" class="nav-link" @onclick="CloseMenu">
-                        ART GALLERY
-                    </a>
-                </nav>
-            </div>
-        </div>
-
         <img src="/library/mobile/background.jpg" alt="The Sea Gypsies Library" class="background-image" />
         
         <!-- Clickable hotspots -->
@@ -49,6 +26,28 @@
         <div class="hotspot download-script-hotspot" @onclick="ShowDownloadForm"></div>
         <div class="hotspot watch-video-hotspot" @onclick="OpenVideoPlayer"></div>
         <div class="hotspot home-button-hotspot" @onclick="NavigateToHome"></div>
+    </div>
+
+    <!-- Mobile Navigation Menu (moved out of clipped container) -->
+    <div class="nav-menu @(isMenuOpen ? "open" : "")">
+        <div class="nav-overlay" @onclick="CloseMenu"></div>
+        <div class="nav-content">
+            <div class="nav-header">
+                <h2>The Sea Gypsies</h2>
+                <button class="nav-close" @onclick="CloseMenu">×</button>
+            </div>
+            <nav class="nav-links">
+                <a href="/mobile" class="nav-link" @onclick="CloseMenu">
+                    HOME
+                </a>
+                <a href="/mobile/library" class="nav-link active" @onclick="CloseMenu">
+                    LIBRARY
+                </a>
+                <a href="/mobile/art" class="nav-link" @onclick="CloseMenu">
+                    ART GALLERY
+                </a>
+            </nav>
+        </div>
     </div>
 </div>
 
@@ -82,8 +81,7 @@
 <!-- Download Script Form Modal -->
 <SeaGypsies.Pages.Desktop.DownloadScriptForm
     IsOpen="@showDownloadFormModal"
-    OnCancel="@CloseDownloadForm"
-    OnSubmit="@HandleFormSubmit" />
+    OnCancel="@CloseDownloadForm" />
 
 <!-- Video Player Modal -->
 @if (showVideoPlayer)
@@ -118,15 +116,53 @@
         inset: 0;
         display: grid;
         place-items: center;
-        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        /* Push content below the fixed top bar and clear dynamic browser bottom bar */
+        --mobile-bottom-pad: calc(env(safe-area-inset-bottom) + 14px);
+        padding: calc(env(safe-area-inset-top) + 60px)
+                 env(safe-area-inset-right)
+                 var(--mobile-bottom-pad)
+                 env(safe-area-inset-left);
+        /* Overflow background so letterboxing shows image instead of black */
+        --overflow-bg: url('/gallery/backgrounds/mobile_background.jpg');
+        background-color: #000;
+        /* Include soft vignette as a background layer so it never overlays content */
+        background-image: radial-gradient(ellipse at center,
+                              rgba(0,0,0,0) 55%,
+                              rgba(0,0,0,0.25) 80%,
+                              rgba(0,0,0,0.4) 100%),
+                          var(--overflow-bg);
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+    }
+
+    /* Blurred overflow background layer (DOM element avoids iOS filter stacking quirks) */
+    .overflow-bg-blur {
+        position: absolute;
+        inset: 0;
+        background-image: var(--overflow-bg);
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        filter: blur(10px);
+        transform: scale(1.06); /* avoid edge clipping of blur */
+        /* Extend under the viewport padding so it's not clipped on safe-area sides */
+        margin-left: calc(-1 * env(safe-area-inset-left));
+        margin-right: calc(-1 * env(safe-area-inset-right));
+        margin-top: calc(-1 * (env(safe-area-inset-top) + 60px));
+        margin-bottom: calc(-1 * var(--mobile-bottom-pad));
+        z-index: 0; /* behind main content */
+        pointer-events: none;
     }
 
     .library-container {
         position: relative;
-        width: min(100vw, calc(100vh * 9 / 16));
-        height: min(calc(100vw * 16 / 9), 100vh);
+        /* Maintain 9:16 stage while respecting the 60px top bar and bottom browser UI */
+        width: min(100vw, calc((100dvh - 60px - var(--mobile-bottom-pad)) * 9 / 16));
+        height: min(calc(100vw * 16 / 9), calc(100dvh - 60px - var(--mobile-bottom-pad)));
         aspect-ratio: 9 / 16;
         overflow: hidden;
+        z-index: 1; /* ensure it sits above blurred layer */
     }
 
     .background-image {
@@ -202,7 +238,7 @@
         left: 16px;
         top: 50%;
         transform: translateY(-50%);
-        background: linear-gradient(135deg, rgba(14, 165, 233, 0.9) 0%, rgba(6, 182, 212, 0.9) 50%, rgba(59, 130, 246, 0.9) 100%);
+        background: #12506e;
         border: 2px solid rgba(255, 255, 255, 0.3);
         border-radius: 50%;
         width: 44px;
@@ -226,55 +262,22 @@
         transform: translateY(-50%) scale(0.95);
     }
 
-    .wave-container {
-        position: absolute;
-        inset: 0;
-        border-radius: 50%;
-        overflow: hidden;
+    .hamburger-icon {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        width: 20px;
+        height: 14px;
+        position: relative;
     }
 
-    .wave {
-        position: absolute;
-        bottom: -5px;
-        left: -50%;
-        width: 200%;
-        height: 12px;
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 50%;
-        animation: wave-motion 3s ease-in-out infinite;
-    }
-
-    .wave1 {
-        animation-delay: 0s;
-        opacity: 0.7;
-    }
-
-    .wave2 {
-        animation-delay: 1s;
-        opacity: 0.5;
-        height: 10px;
-    }
-
-    .wave3 {
-        animation-delay: 2s;
-        opacity: 0.3;
-        height: 8px;
-    }
-
-    @@keyframes wave-motion {
-        0%, 100% {
-            transform: translateX(0) rotate(0deg);
-        }
-        50% {
-            transform: translateX(5px) rotate(180deg);
-        }
-    }
-
-    .anchor-icon {
-        font-size: 18px;
-        color: #fff;
-        z-index: 2;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    .hamburger-icon span {
+        display: block;
+        width: 100%;
+        height: 2px;
+        background: #fff;
+        border-radius: 2px;
+        transition: all 0.3s ease;
     }
 
     .navbar-text {
@@ -347,6 +350,7 @@
     .nav-header h2 {
         margin: 0;
         color: #67f6ff;
+        font-family: 'apotek-comp', sans-serif;
         font-size: 20px;
         font-weight: 600;
         letter-spacing: 1px;
@@ -382,9 +386,10 @@
         padding: 16px 24px;
         color: rgba(255, 255, 255, 0.8);
         text-decoration: none;
+        font-family: 'apotek-comp', sans-serif;
         font-size: 16px;
         font-weight: 500;
-        letter-spacing: 0.5px;
+        letter-spacing: 3px;
         text-transform: uppercase;
         transition: all 0.2s ease;
         border-left: 3px solid transparent;
@@ -576,15 +581,6 @@
     {
         showDownloadFormModal = false;
         return Task.CompletedTask;
-    }
-
-    private async Task HandleFormSubmit(SeaGypsies.Pages.Desktop.DownloadScriptForm.FormModel model)
-    {
-        // Handle form submission - you can send email or process the data here
-        Console.WriteLine($"Form submitted: {model.FirstName} {model.LastName} {model.Email}");
-        showDownloadFormModal = false;
-        // You can add additional logic here like showing a success message
-        await Task.CompletedTask;
     }
 
     private void OpenVideoPlayer()

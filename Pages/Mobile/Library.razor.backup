@@ -566,8 +566,7 @@
     color: #67f6ff;
     font-family: 'apotek-comp', system-ui, -apple-system, sans-serif;
     font-size: 14px;
-    font-weight: bold;
-    letter-spacing: 1px;
+    letter-spacing: 3px;
     text-transform: uppercase;
     text-shadow: 0 0 8px rgba(103, 246, 255, 0.3);
     text-align: center;

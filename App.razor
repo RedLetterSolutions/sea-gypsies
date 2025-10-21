@@ -69,6 +69,111 @@
 
     <script src="_framework/blazor.server.js"></script>
     <script src="device-detection.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/RedLetterSolutions/rls-contact-forms@main/rls-contact-api.min.js"></script>
+    <script>
+        // Initialize RLS Contact Form API (guard so other helpers still define even if CDN fails)
+        try {
+            if (window.RLSContact && typeof window.RLSContact.init === 'function') {
+                window.RLSContact.init({ siteId: 'sea_gypsies' });
+            } else {
+                console.warn('[RLS] API not available at initial init');
+            }
+        } catch (e) {
+            console.error('[RLS] Init error:', e);
+        }
+
+        // Minimal helper to (re)initialize RLS binding once when modal opens
+        window.bindRLSOnce = function() {
+            try {
+                if (window.RLSContact && typeof window.RLSContact.init === 'function') {
+                    window.RLSContact.init({ siteId: 'sea_gypsies' });
+                }
+            } catch (e) { console.error('[RLS] bind once error:', e); }
+        }
+
+        // JS <-> Blazor interop for closing the download form
+        window.setDownloadFormPageRef = function(dotNetRef) {
+            window.__downloadFormPageRef = dotNetRef;
+        }
+        window.closeDownloadFormFromJS = function() {
+            if (window.__downloadFormPageRef) {
+                window.__downloadFormPageRef.invokeMethodAsync('CloseDownloadFormFromJS');
+            }
+        }
+
+        // Success handler for contact form (close modal after success)
+        window.handleContactSuccess = function(result) {
+            console.log('Contact form submitted successfully:', result);
+            try {
+                const form = document.getElementById('seaGypsiesForm');
+                if (form) {
+                    form.reset();
+                }
+            } catch {}
+            // Close the modal via Blazor
+            window.closeDownloadFormFromJS && window.closeDownloadFormFromJS();
+            return true;
+        };
+
+        // Error handler for contact form
+        window.handleContactError = function(error) {
+            console.error('Contact form error:', error);
+            alert('Error: ' + (error.message || 'Failed to send the script. Please try again.'));
+            return false;
+        };
+
+        // Initialize the Sea Gypsies contact form (no rebind/retry; just prepare UI and combine name)
+        window.initSeaGypsiesContactForm = function() {
+            const form = document.getElementById('seaGypsiesForm');
+            if (!form) {
+                console.log('Form not found');
+                return;
+            }
+            if (form.dataset.sgInit === '1') {
+                console.log('Form already initialized (sgInit)');
+                return;
+            }
+            form.dataset.sgInit = '1';
+
+            // Avoid duplicate init when modal opens/closes repeatedly
+            if (form.dataset.rlsInit === '1') {
+                console.log('Form already initialized');
+                if (window.bindRLSForms) window.bindRLSForms();
+                return;
+            }
+            form.dataset.rlsInit = '1';
+
+            console.log('Initializing Sea Gypsies contact form...');
+
+            // Add submit event listener to combine first/last name before submission
+            // Disable close/cancel while submitting and combine name before submit
+            form.addEventListener('submit', function(e) {
+                const firstName = document.getElementById('firstNameInput').value.trim();
+                const lastName = document.getElementById('lastNameInput').value.trim();
+                const hiddenName = document.getElementById('hiddenName');
+
+                // Combine first and last name
+                let fullName = `${firstName} ${lastName}`.trim();
+                if (!fullName) {
+                    fullName = 'Script Download Request';
+                }
+
+                hiddenName.value = fullName;
+                console.log('Combined name:', fullName);
+                // Disable cancel/close during submission
+                try {
+                    const cancelBtn = form.querySelector('.df-cancel');
+                    const sendBtn = form.querySelector('.df-send');
+                    const closeBtn = document.querySelector('.df-close');
+                    if (cancelBtn) { cancelBtn.setAttribute('disabled', 'true'); cancelBtn.setAttribute('aria-disabled', 'true'); }
+                    if (closeBtn) { closeBtn.setAttribute('disabled', 'true'); closeBtn.setAttribute('aria-disabled', 'true'); }
+                    if (sendBtn) { sendBtn.setAttribute('aria-busy', 'true'); }
+                } catch {}
+            }, false);
+
+            console.log('Form initialized successfully');
+        };
+    </script>
     <script>
         // Ambient Music Player
         window.initAmbientMusic = () => {
