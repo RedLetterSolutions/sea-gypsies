@@ -1,0 +1,11 @@
+bin/
+obj/
+.vs/
+.git/
+.gitignore
+Dockerfile*
+docker-compose*.yml
+**/node_modules
+**/wwwroot/lib
+*.user
+*.suo
