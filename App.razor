@@ -5,9 +5,21 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="/" />
+    @* Compute CDN path helper based on configuration *@
+    @{ 
+        var cdnHost = (Configuration?["AssetCdnHost"] ?? string.Empty).TrimEnd('/');
+        string CdnPath(string path) => string.IsNullOrWhiteSpace(cdnHost) ? path : $"{cdnHost}/{path.TrimStart('/')}";
+    }
+    <!-- Preconnects to speed up first requests to third-party CDNs -->
+    <link rel="preconnect" href="https://use.typekit.net" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <!-- Optional: replace with your Bunny CDN hostname once configured -->
+    @if (!string.IsNullOrWhiteSpace(cdnHost)) {
+        <text><link rel="preconnect" href="@cdnHost" crossorigin></text>
+    }
     <link rel="stylesheet" href="https://use.typekit.net/tkz8vzf.css">
-    <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="css/app.css" />
+    <link rel="stylesheet" href="@CdnPath("lib/bootstrap/dist/css/bootstrap.min.css")" />
+    <link rel="stylesheet" href="@CdnPath("css/app.css")" />
     <link rel="icon" type="image/png" href="gallery/favicon/favicon.png" />
     <link href="SeaGypsies.styles.css" rel="stylesheet" />
     <HeadOutlet />
@@ -67,8 +79,10 @@
         <a class="dismiss">🗙</a>
     </div>
 
+    <script>window.__CDN_HOST = "@cdnHost";</script>
+    <script src="@CdnPath("cdn.js")"></script>
     <script src="_framework/blazor.server.js"></script>
-    <script src="device-detection.js"></script>
+    <script src="@CdnPath("device-detection.js")"></script>
     <script src="https://cdn.jsdelivr.net/gh/RedLetterSolutions/rls-contact-forms@main/rls-contact-api.min.js"></script>
     <script>
         // Initialize RLS Contact Form API (guard so other helpers still define even if CDN fails)
@@ -245,7 +259,7 @@
             const a = document.getElementById('homeBgA');
             const b = document.getElementById('homeBgB');
             if (!a || !b) return;
-            a.style.backgroundImage = `url('${defaultImage}')`;
+            a.style.backgroundImage = `url('${window.cdnUrl(defaultImage)}')`;
             a.style.opacity = '1';
             b.style.opacity = '0';
         };
@@ -266,7 +280,7 @@
             top.style.transition = 'none';
             bottom.style.transition = 'none';
 
-            top.style.backgroundImage = `url('${imageName}')`;
+            top.style.backgroundImage = `url('${window.cdnUrl(imageName)}')`;
             top.style.opacity = '1';
             bottom.style.opacity = '0';
 
@@ -297,7 +311,7 @@
             const a = document.getElementById('galleryBgA');
             const b = document.getElementById('galleryBgB');
             if (!a || !b) return;
-            a.style.backgroundImage = `url('${defaultImage}')`;
+            a.style.backgroundImage = `url('${window.cdnUrl(defaultImage)}')`;
             a.style.opacity = '1';
             b.style.opacity = '0';
         };
@@ -324,7 +338,7 @@
             bottom.style.transition = 'none';
 
             // Set next image on hidden layer and flip opacities instantly
-            top.style.backgroundImage = `url('${imageName}')`;
+            top.style.backgroundImage = `url('${window.cdnUrl(imageName)}')`;
             top.style.opacity = '1';
             bottom.style.opacity = '0';
 
@@ -340,12 +354,25 @@
                 const img = new Image();
                 img.onload = () => resolve(img);
                 img.onerror = () => reject(new Error(`Failed to load image: ${imageUrl}`));
-                img.src = imageUrl;
+                img.src = window.cdnUrl(imageUrl);
             });
         };
 
         window.preloadImages = (imageUrls) => {
-            if (!Array.isArray(imageUrls)) return Promise.resolve();
+            if (!Array.isArray(imageUrls) || imageUrls.length === 0) return Promise.resolve();
+
+            // Be conservative on slow networks or when user enabled data saver
+            try {
+                const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+                const saveData = conn && conn.saveData;
+                const speed = conn && conn.effectiveType || '';
+                const isSlow = saveData || /(^|[^0-9])2g|3g/i.test(speed);
+                if (isSlow) {
+                    // Skip bulk preloads on slow connections to improve perceived performance
+                    return Promise.resolve();
+                }
+            } catch {}
+
             return Promise.allSettled(imageUrls.map(url => window.preloadImage(url)));
         };
 
@@ -354,7 +381,7 @@
             const a = document.getElementById('libraryBgA');
             const b = document.getElementById('libraryBgB');
             if (!a || !b) return;
-            a.style.backgroundImage = `url('${defaultImage}')`;
+            a.style.backgroundImage = `url('${window.cdnUrl(defaultImage)}')`;
             a.style.opacity = '1';
             b.style.opacity = '0';
         };
@@ -371,7 +398,7 @@
             const prevBottomTransition = bottom.style.transition;
             top.style.transition = 'none';
             bottom.style.transition = 'none';
-            top.style.backgroundImage = `url('${imageName}')`;
+            top.style.backgroundImage = `url('${window.cdnUrl(imageName)}')`;
             top.style.opacity = '1';
             bottom.style.opacity = '0';
             setTimeout(() => {
@@ -514,6 +541,31 @@
 </style>
 
 <script>
+        // Default image lazy-loading: mark images as lazy unless explicitly opted-out
+        (function enableDefaultLazyLoading(){
+            const setLazy = (img) => {
+                if (!img) return;
+                if (img.hasAttribute('data-no-lazy')) return;
+                // Avoid lazy for tiny icons/favicons
+                const w = img.getAttribute('width');
+                const h = img.getAttribute('height');
+                const small = (w && +w < 40) || (h && +h < 40);
+                if (!small) img.loading = 'lazy';
+            };
+            // Existing images
+            document.querySelectorAll('img').forEach(setLazy);
+            // Future images
+            const mo = new MutationObserver((mutations) => {
+                for (const m of mutations) {
+                    m.addedNodes && m.addedNodes.forEach(node => {
+                        if (node && node.tagName === 'IMG') setLazy(node);
+                        if (node && node.querySelectorAll) node.querySelectorAll('img').forEach(setLazy);
+                    });
+                }
+            });
+            mo.observe(document.documentElement, { subtree: true, childList: true });
+        })();
+
 
         window.navigateWithTransition = function(url, direction) {
             if (direction) {
@@ -551,6 +603,7 @@
 </script>
 
 @using Microsoft.JSInterop
+@inject IConfiguration Configuration
 @inject IJSRuntime JSRuntime
 
 @code {
