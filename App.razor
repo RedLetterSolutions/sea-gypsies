@@ -22,6 +22,8 @@
     <link rel="stylesheet" href="@CdnPath("css/app.css")" />
     <link rel="icon" type="image/png" href="gallery/favicon/favicon.png" />
     <link href="SeaGypsies.styles.css" rel="stylesheet" />
+    <!-- PWA manifest (helps enforce portrait when installed) -->
+    <link rel="manifest" href="manifest.webmanifest">
     <HeadOutlet />
     <style>
         /* Loading screen color before Blazor mounts */
@@ -32,10 +34,98 @@
         #app {
             background: #256878;
         }
+
+        /* Rotate-to-portrait overlay for mobile landscape */
+        #rotate-to-portrait-overlay {
+            position: fixed;
+            inset: 0;
+            background: #0e1a20;
+            color: #e6f7fb;
+            display: none; /* toggled via JS */
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            z-index: 2147483647; /* Above everything */
+            padding: 24px;
+        }
+        #rotate-to-portrait-overlay .content {
+            max-width: 24rem;
+        }
+        #rotate-to-portrait-overlay h2 {
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        #rotate-to-portrait-overlay p {
+            opacity: 0.85;
+            line-height: 1.35;
+        }
+        /* Prevent scroll when overlay is visible */
+        body.landscape-block {
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* Success Toast */
+        #sgToast {
+            position: fixed;
+            left: 50%;
+            bottom: 28px;
+            transform: translateX(-50%) translateY(20px);
+            background: rgba(0, 27, 36, 0.85);
+            color: #e6f7fb;
+            border: 1px solid rgba(0, 212, 255, 0.45);
+            box-shadow: 0 8px 24px rgba(0, 212, 255, 0.25);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 12px;
+            padding: 12px 16px;
+            max-width: 90vw;
+            width: max-content;
+            min-width: 260px;
+            display: none;
+            z-index: 2147483600;
+        }
+        #sgToast.show {
+            display: block;
+            animation: sgToastIn 180ms ease-out;
+            transform: translateX(-50%) translateY(0);
+        }
+        #sgToast .msg {
+            display: inline-block;
+            margin-right: 10px;
+        }
+        #sgToast .close {
+            appearance: none;
+            border: 0;
+            background: transparent;
+            color: #89f0ff;
+            font-size: 18px;
+            line-height: 1;
+            cursor: pointer;
+        }
+        @@keyframes sgToastIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+            to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
     </style>
 </head>
 
 <body>
+
+    <!-- Shown only on small touch devices when in landscape -->
+    <div id="rotate-to-portrait-overlay" role="dialog" aria-live="polite" aria-label="Portrait mode required">
+        <div class="content">
+            <h2>Please rotate your device</h2>
+            <p>This experience is optimized for portrait on mobile. Turn your device upright to continue.</p>
+        </div>
+    </div>
+
+    <!-- Global Success Toast -->
+    <div id="sgToast" role="status" aria-live="polite" aria-atomic="true">
+        <span class="msg" id="sgToastMsg">Success</span>
+        <button class="close" id="sgToastClose" aria-label="Close notification">×</button>
+    </div>
 
     <!-- Ambient Music Player -->
     <audio id="ambientMusic" loop preload="auto">
@@ -85,6 +175,43 @@
     <script src="@CdnPath("device-detection.js")"></script>
     <script src="https://cdn.jsdelivr.net/gh/RedLetterSolutions/rls-contact-forms@main/rls-contact-api.min.js"></script>
     <script>
+        // Attempt to lock orientation to portrait where the API allows (installed PWA/fullscreen)
+        (function tryLockOrientation() {
+            try {
+                if (screen.orientation && screen.orientation.lock) {
+                    screen.orientation.lock('portrait').catch(() => { /* Ignore: not permitted in most browsers */ });
+                }
+            } catch { /* noop */ }
+        })();
+
+        // Block landscape on small touch devices by showing an overlay
+        (function enablePortraitOnlyUX() {
+            const isCoarsePointer = () => window.matchMedia('(pointer: coarse)').matches;
+            const isSmallViewport = () => Math.min(window.innerWidth, window.innerHeight) <= 900; // phone + many small tablets
+            const isMobileish = () => isCoarsePointer() && isSmallViewport();
+            const isLandscape = () => window.matchMedia('(orientation: landscape)').matches;
+
+            const overlay = document.getElementById('rotate-to-portrait-overlay');
+            if (!overlay) return;
+
+            function update() {
+                const shouldBlock = isMobileish() && isLandscape();
+                overlay.style.display = shouldBlock ? 'flex' : 'none';
+                document.body.classList.toggle('landscape-block', shouldBlock);
+            }
+
+            // Initial check and on changes
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', update);
+            } else {
+                update();
+            }
+            window.addEventListener('resize', update, { passive: true });
+            window.addEventListener('orientationchange', update);
+            document.addEventListener('visibilitychange', () => { if (!document.hidden) update(); });
+        })();
+    </script>
+    <script>
         // Initialize RLS Contact Form API (guard so other helpers still define even if CDN fails)
         try {
             if (window.RLSContact && typeof window.RLSContact.init === 'function') {
@@ -126,6 +253,10 @@
             } catch {}
             // Close the modal via Blazor
             window.closeDownloadFormFromJS && window.closeDownloadFormFromJS();
+            // Show success toast
+            try {
+                window.showToast && window.showToast('Thanks! Your script request has been sent. Check your email for the download link.');
+            } catch {}
             return true;
         };
 
@@ -253,6 +384,39 @@
         } else {
             window.initAmbientMusic();
         }
+
+        // Simple global toast functions
+        (function toastSetup(){
+            const toast = document.getElementById('sgToast');
+            const msgEl = document.getElementById('sgToastMsg');
+            const btn = document.getElementById('sgToastClose');
+            let hideTimer = null;
+
+            function hide() {
+                if (!toast) return;
+                toast.classList.remove('show');
+                // allow display none after animation for accessibility reflow
+                setTimeout(() => {
+                    if (!toast.classList.contains('show')) toast.style.display = 'none';
+                }, 180);
+            }
+
+            window.hideToast = hide;
+
+            window.showToast = function(message, durationMs = 4200) {
+                if (!toast || !msgEl) return;
+                if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+                msgEl.textContent = message || 'Success';
+                toast.style.display = 'block';
+                // force reflow to restart animation
+                // eslint-disable-next-line no-unused-expressions
+                toast.offsetHeight;
+                toast.classList.add('show');
+                hideTimer = setTimeout(hide, durationMs);
+            };
+
+            if (btn) btn.addEventListener('click', hide);
+        })();
 
         // Home page layered background
         window.initHomeBackground = (defaultImage) => {

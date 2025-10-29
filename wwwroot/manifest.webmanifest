@@ -1,0 +1,11 @@
+{
+  "name": "Sea Gypsies",
+  "short_name": "Sea Gypsies",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#256878",
+  "theme_color": "#256878",
+  "orientation": "portrait",
+  "prefer_related_applications": false
+}
