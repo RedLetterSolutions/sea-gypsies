@@ -223,14 +223,8 @@
             console.error('[RLS] Init error:', e);
         }
 
-        // Minimal helper to (re)initialize RLS binding once when modal opens
-        window.bindRLSOnce = function() {
-            try {
-                if (window.RLSContact && typeof window.RLSContact.init === 'function') {
-                    window.RLSContact.init({ siteId: 'sea_gypsies' });
-                }
-            } catch (e) { console.error('[RLS] bind once error:', e); }
-        }
+        // Note: RLSContact.init is called once on page load above. For dynamically inserted forms
+        // we rely on the vendor-provided window.bindRLSForms() when available, avoiding multiple inits.
 
         // JS <-> Blazor interop for closing the download form
         window.setDownloadFormPageRef = function(dotNetRef) {
@@ -283,10 +277,12 @@
             // Avoid duplicate init when modal opens/closes repeatedly
             if (form.dataset.rlsInit === '1') {
                 console.log('Form already initialized');
-                if (window.bindRLSForms) window.bindRLSForms();
                 return;
             }
             form.dataset.rlsInit = '1';
+
+            // For dynamically added forms, ask the vendor script to (re)bind form handlers once
+            try { if (window.bindRLSForms) window.bindRLSForms(); } catch {}
 
             console.log('Initializing Sea Gypsies contact form...');
 
