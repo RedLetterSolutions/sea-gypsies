@@ -230,7 +230,6 @@
             return false;
         }
 
-<<<<<<< HEAD
         // Minimal helper to (re)initialize RLS binding once when modal opens
         window.bindRLSOnce = function() {
             try {
@@ -239,9 +238,6 @@
                 }
             } catch (e) { console.error('[RLS] bind once error:', e); }
         }
-
-=======
->>>>>>> f41df6d656c22ad7b2c825b7817d40d2960c6e15
         // JS <-> Blazor interop for closing the download form
         window.setDownloadFormPageRef = function(dotNetRef) {
             window.__downloadFormPageRef = dotNetRef;
@@ -298,7 +294,6 @@
             }
             form.dataset.sgInit = '1';
 
-<<<<<<< HEAD
             // Avoid duplicate init when modal opens/closes repeatedly
             if (form.dataset.rlsInit === '1') {
                 console.log('Form already initialized');
@@ -306,9 +301,6 @@
                 return;
             }
             form.dataset.rlsInit = '1';
-
-=======
->>>>>>> f41df6d656c22ad7b2c825b7817d40d2960c6e15
             console.log('Initializing Sea Gypsies contact form...');
 
             // Add submit event listener to combine first/last name before submission
