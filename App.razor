@@ -212,17 +212,25 @@
         })();
     </script>
     <script>
-        // Initialize RLS Contact Form API (guard so other helpers still define even if CDN fails)
-        try {
-            if (window.RLSContact && typeof window.RLSContact.init === 'function') {
-                window.RLSContact.init({ siteId: 'sea_gypsies' });
-            } else {
-                console.warn('[RLS] API not available at initial init');
+        // Ensure the RLS Contact API is initialized EXACTLY once per page session.
+        // We call this when the modal form first opens so the vendor attaches a single delegated handler.
+        window.ensureRLSInited = function() {
+            if (window.__rlsInited) return true;
+            try {
+                if (window.RLSContact && typeof window.RLSContact.init === 'function') {
+                    window.RLSContact.init({ siteId: 'sea_gypsies' });
+                    window.__rlsInited = true;
+                    return true;
+                } else {
+                    console.warn('[RLS] API not yet loaded');
+                }
+            } catch (e) {
+                console.error('[RLS] Init error:', e);
             }
-        } catch (e) {
-            console.error('[RLS] Init error:', e);
+            return false;
         }
 
+<<<<<<< HEAD
         // Minimal helper to (re)initialize RLS binding once when modal opens
         window.bindRLSOnce = function() {
             try {
@@ -232,6 +240,8 @@
             } catch (e) { console.error('[RLS] bind once error:', e); }
         }
 
+=======
+>>>>>>> f41df6d656c22ad7b2c825b7817d40d2960c6e15
         // JS <-> Blazor interop for closing the download form
         window.setDownloadFormPageRef = function(dotNetRef) {
             window.__downloadFormPageRef = dotNetRef;
@@ -269,6 +279,14 @@
 
         // Initialize the Sea Gypsies contact form (no rebind/retry; just prepare UI and combine name)
         window.initSeaGypsiesContactForm = function() {
+            // Make sure vendor is initialized once (when modal appears)
+            try {
+                if (!window.ensureRLSInited || !window.ensureRLSInited()) {
+                    // Retry shortly if the script hasn't finished loading yet
+                    setTimeout(() => { try { window.ensureRLSInited && window.ensureRLSInited(); } catch {} }, 150);
+                }
+            } catch {}
+
             const form = document.getElementById('seaGypsiesForm');
             if (!form) {
                 console.log('Form not found');
@@ -280,6 +298,7 @@
             }
             form.dataset.sgInit = '1';
 
+<<<<<<< HEAD
             // Avoid duplicate init when modal opens/closes repeatedly
             if (form.dataset.rlsInit === '1') {
                 console.log('Form already initialized');
@@ -288,6 +307,8 @@
             }
             form.dataset.rlsInit = '1';
 
+=======
+>>>>>>> f41df6d656c22ad7b2c825b7817d40d2960c6e15
             console.log('Initializing Sea Gypsies contact form...');
 
             // Add submit event listener to combine first/last name before submission
