@@ -80,6 +80,7 @@
       try
       {
         await JSRuntime.InvokeVoidAsync("initSeaGypsiesContactForm");
+        await JSRuntime.InvokeVoidAsync("bindRLSOnce");
         _initForOpen = true;
       }
       catch (Exception ex)
