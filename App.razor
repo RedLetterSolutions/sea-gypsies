@@ -304,6 +304,24 @@
             form.dataset.rlsInit = '1';
             console.log('Initializing Sea Gypsies contact form...');
 
+            // Keep hidden full name updated as the user types to avoid timing issues
+            try {
+                const firstEl = document.getElementById('firstNameInput');
+                const lastEl = document.getElementById('lastNameInput');
+                const hiddenName = document.getElementById('hiddenName');
+                const updateName = () => {
+                    if (!hiddenName) return;
+                    const fn = firstEl && firstEl.value ? firstEl.value.trim() : '';
+                    const ln = lastEl && lastEl.value ? lastEl.value.trim() : '';
+                    const full = `${fn} ${ln}`.trim() || 'Script Download Request';
+                    hiddenName.value = full;
+                };
+                if (firstEl) firstEl.addEventListener('input', updateName);
+                if (lastEl) lastEl.addEventListener('input', updateName);
+                // Set initial value immediately
+                updateName();
+            } catch {}
+
             // Add submit event listener to combine first/last name before submission
             // Disable close/cancel while submitting and combine name before submit
             form.addEventListener('submit', function(e) {
