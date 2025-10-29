@@ -230,11 +230,13 @@
             return false;
         }
 
-        // Minimal helper to (re)initialize RLS binding once when modal opens
+        // Minimal helper to (re)initialize RLS binding once when modal opens (guarded per session)
         window.bindRLSOnce = function() {
             try {
+                if (window.__rlsInitedOnce) return; // prevent duplicate vendor handlers
                 if (window.RLSContact && typeof window.RLSContact.init === 'function') {
                     window.RLSContact.init({ siteId: 'sea_gypsies' });
+                    window.__rlsInitedOnce = true;
                 }
             } catch (e) { console.error('[RLS] bind once error:', e); }
         }
@@ -297,7 +299,6 @@
             // Avoid duplicate init when modal opens/closes repeatedly
             if (form.dataset.rlsInit === '1') {
                 console.log('Form already initialized');
-                if (window.bindRLSForms) window.bindRLSForms();
                 return;
             }
             form.dataset.rlsInit = '1';
