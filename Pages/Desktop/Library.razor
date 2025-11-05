@@ -39,10 +39,7 @@
     {
       <div class="@DefaultContentAreaClass">
         <div class="video-placeholder">
-          <img src="library/video_placeholder.png" alt="Video Placeholder" class="placeholder-image" />
-          <button class="script-button" @onclick="OpenScript">
-            <img src="library/click_to_read_script.png" alt="Click to Read Script" />
-          </button>
+          <img src="library/script_cover.jpeg" alt="Script Cover" class="placeholder-image" />
         </div>
       </div>
     }
@@ -73,6 +70,58 @@
     <SeaGypsies.Pages.Desktop.DownloadScriptForm
       IsOpen="@showDownloadForm"
       OnCancel="@HideDownloadForm" />
+
+    <!-- Debug Coordinate Tool -->
+    @if (debugMode)
+    {
+        <div class="debug-overlay" @onclick="HandleDebugClick">
+            <div class="debug-info">
+                <div class="debug-header">
+                    <h3>Coordinate Debug Tool</h3>
+                    <button @onclick="ToggleDebugMode" @onclick:stopPropagation="true">Close</button>
+                </div>
+                <div class="debug-instructions">
+                    Click anywhere to capture coordinates. Click twice to define bounds.
+                </div>
+                @if (debugClicks.Count > 0)
+                {
+                    <div class="debug-coordinates">
+                        @foreach (var click in debugClicks.Select((c, i) => new { Click = c, Index = i }))
+                        {
+                            <div class="debug-coord-item">
+                                <strong>Point @(click.Index + 1):</strong>
+                                Left: @click.Click.PercentX.ToString("F2")% (@click.Click.PixelX px)
+                                Top: @click.Click.PercentY.ToString("F2")% (@click.Click.PixelY px)
+                            </div>
+                        }
+                        @if (debugClicks.Count >= 2)
+                        {
+                            var bounds = CalculateBounds();
+                            <div class="debug-bounds">
+                                <strong>Bounds:</strong><br/>
+                                Left: @bounds.Left.ToString("F2")%<br/>
+                                Top: @bounds.Top.ToString("F2")%<br/>
+                                Width: @bounds.Width.ToString("F2")%<br/>
+                                Height: @bounds.Height.ToString("F2")%
+                            </div>
+                        }
+                        <button @onclick="ClearDebugClicks" @onclick:stopPropagation="true">Clear Points</button>
+                    </div>
+                }
+            </div>
+            @if (debugClicks.Count >= 2)
+            {
+                var bounds = CalculateBounds();
+                <div class="debug-bounds-box" style="left: @(bounds.Left)%; top: @(bounds.Top)%; width: @(bounds.Width)%; height: @(bounds.Height)%;"></div>
+            }
+            @foreach (var click in debugClicks)
+            {
+                <div class="debug-marker" style="left: @(click.PercentX)%; top: @(click.PercentY)%;"></div>
+            }
+        </div>
+    }
+    <button class="debug-toggle" @onclick="ToggleDebugMode">@(debugMode ? "Hide" : "Show") Debug</button>
+
   </div>
 </div>
 
@@ -100,10 +149,10 @@
     aspect-ratio: 16 / 9;
     overflow: hidden;
     /* Tunable placement for the content area relative to this 16:9 container */
-  --content-left: 35.5%; /* +5% more to the right */
-  --content-top: 24.0%;  /* +5% more down */
-    --content-width: 58.5%;
-    --content-height: 58%;
+    --content-left: 33.80%;
+    --content-top: 21.36%;
+    --content-width: 61.35%;
+    --content-height: 69%;
   }
 
   .library-background { position: absolute; inset: 0; z-index: 1; }
@@ -135,16 +184,16 @@
   .content-area {
     position: absolute;
     /* Positioned as percentages relative to the 16:9 container */
-    left: var(--content-left);
-    top: var(--content-top);
-    width: var(--content-width);
-    height: var(--content-height);
+    left: 33.80%;
+    top: 21.36%;
+    width: 61.35%;
+    height: 70%;
     z-index: 20;
-  background: rgba(2, 15, 18, 0.82);
-  border: none;
-    border-radius: 8px;
+    background: transparent;
+    border: none;
+    border-radius: 0;
     color: #e7f6fb;
-    padding: 12px;
+    padding: 0;
     box-sizing: border-box;
     display: grid;
   }
@@ -184,8 +233,8 @@
   /* Default Content Area */
   .default-content {
     display: flex;
-    align-items: center;
-    justify-content: center;
+    align-items: flex-start;
+    justify-content: flex-start;
   }
 
   .video-placeholder {
@@ -193,15 +242,15 @@
     width: 100%;
     height: 100%;
     display: flex;
-    align-items: center;
-    justify-content: center;
+    align-items: flex-start;
+    justify-content: flex-start;
   }
 
   .placeholder-image {
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    border-radius: 4px;
+    object-fit: contain;
+    border-radius: 0;
   }
 
   .script-button {
@@ -227,8 +276,132 @@
     height: auto;
   }
 
+  /* Debug Tool Styles */
+  .debug-toggle {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 9999;
+    background: rgba(255, 0, 0, 0.8);
+    color: white;
+    border: 2px solid white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'apotek-comp', sans-serif;
+    font-size: 14px;
+    font-weight: bold;
+  }
+
+  .debug-toggle:hover {
+    background: rgba(255, 0, 0, 1);
+  }
+
+  .debug-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 9998;
+    cursor: crosshair;
+  }
+
+  .debug-info {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    border: 2px solid #67f6ff;
+    font-family: 'apotek-comp', sans-serif;
+    max-width: 400px;
+    z-index: 10000;
+  }
+
+  .debug-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #67f6ff;
+    padding-bottom: 10px;
+  }
+
+  .debug-header h3 {
+    margin: 0;
+    color: #67f6ff;
+    font-size: 18px;
+  }
+
+  .debug-header button,
+  .debug-coordinates button {
+    background: #67f6ff;
+    color: #000;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'apotek-comp', sans-serif;
+    font-weight: bold;
+  }
+
+  .debug-header button:hover,
+  .debug-coordinates button:hover {
+    background: #fff;
+  }
+
+  .debug-instructions {
+    margin-bottom: 15px;
+    color: #67f6ff;
+    font-size: 14px;
+  }
+
+  .debug-coordinates {
+    margin-top: 15px;
+  }
+
+  .debug-coord-item {
+    background: rgba(103, 246, 255, 0.1);
+    padding: 8px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    font-size: 13px;
+  }
+
+  .debug-bounds {
+    background: rgba(255, 215, 0, 0.2);
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 4px;
+    border: 2px solid rgba(255, 215, 0, 0.8);
+    font-size: 13px;
+    color: #ffd700;
+  }
+
+  .debug-marker {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: red;
+    border: 2px solid white;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 9999;
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.8);
+  }
+
+  .debug-bounds-box {
+    position: absolute;
+    border: 3px dashed #ffd700;
+    background: rgba(255, 215, 0, 0.1);
+    pointer-events: none;
+    z-index: 9997;
+    box-shadow: inset 0 0 20px rgba(255, 215, 0, 0.3);
+  }
+
   /* Top-right contact button */
-  
+
 
 </style>
 
@@ -313,4 +486,108 @@
   }
 
   private async Task NavigateHome() => await JSRuntime.InvokeVoidAsync("navigateWithTransition", "/desktop", "right");
+
+  // Debug Tool Code
+  private bool debugMode = false;
+  private List<DebugClick> debugClicks = new List<DebugClick>();
+
+  private void ToggleDebugMode()
+  {
+    debugMode = !debugMode;
+    if (!debugMode)
+    {
+      debugClicks.Clear();
+    }
+    StateHasChanged();
+  }
+
+  private async Task HandleDebugClick(MouseEventArgs e)
+  {
+    if (!debugMode) return;
+
+    // Get the container dimensions via JS
+    var containerInfo = await JSRuntime.InvokeAsync<ContainerInfo>("eval", @"
+      (function() {
+        const container = document.querySelector('.library-container');
+        const rect = container.getBoundingClientRect();
+        return {
+          width: rect.width,
+          height: rect.height,
+          left: rect.left,
+          top: rect.top
+        };
+      })()
+    ");
+
+    // Calculate relative position within the container
+    var relativeX = e.ClientX - containerInfo.Left;
+    var relativeY = e.ClientY - containerInfo.Top;
+
+    var percentX = (relativeX / containerInfo.Width) * 100;
+    var percentY = (relativeY / containerInfo.Height) * 100;
+
+    debugClicks.Add(new DebugClick
+    {
+      PixelX = (int)relativeX,
+      PixelY = (int)relativeY,
+      PercentX = percentX,
+      PercentY = percentY
+    });
+
+    // Keep only last 2 clicks for bounds calculation
+    if (debugClicks.Count > 2)
+    {
+      debugClicks.RemoveAt(0);
+    }
+
+    StateHasChanged();
+  }
+
+  private void ClearDebugClicks()
+  {
+    debugClicks.Clear();
+    StateHasChanged();
+  }
+
+  private BoundsInfo CalculateBounds()
+  {
+    if (debugClicks.Count < 2) return new BoundsInfo();
+
+    var minX = Math.Min(debugClicks[0].PercentX, debugClicks[1].PercentX);
+    var maxX = Math.Max(debugClicks[0].PercentX, debugClicks[1].PercentX);
+    var minY = Math.Min(debugClicks[0].PercentY, debugClicks[1].PercentY);
+    var maxY = Math.Max(debugClicks[0].PercentY, debugClicks[1].PercentY);
+
+    return new BoundsInfo
+    {
+      Left = minX,
+      Top = minY,
+      Width = maxX - minX,
+      Height = maxY - minY
+    };
+  }
+
+  public class DebugClick
+  {
+    public int PixelX { get; set; }
+    public int PixelY { get; set; }
+    public double PercentX { get; set; }
+    public double PercentY { get; set; }
+  }
+
+  public class BoundsInfo
+  {
+    public double Left { get; set; }
+    public double Top { get; set; }
+    public double Width { get; set; }
+    public double Height { get; set; }
+  }
+
+  public class ContainerInfo
+  {
+    public double Width { get; set; }
+    public double Height { get; set; }
+    public double Left { get; set; }
+    public double Top { get; set; }
+  }
 }
