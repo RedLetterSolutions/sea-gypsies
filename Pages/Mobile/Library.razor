@@ -123,7 +123,7 @@
                  var(--mobile-bottom-pad)
                  env(safe-area-inset-left);
         /* Overflow background so letterboxing shows image instead of black */
-        --overflow-bg: url('/gallery/backgrounds/mobile_background.jpg');
+        --overflow-bg: url('/sea_background.jpeg');
         background-color: #000;
         /* Include soft vignette as a background layer so it never overlays content */
         background-image: radial-gradient(ellipse at center,
@@ -144,8 +144,8 @@
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
-        filter: blur(10px);
-        transform: scale(1.06); /* avoid edge clipping of blur */
+        filter: blur(0px);
+        transform: scale(1); /* no scale needed without blur */
         /* Extend under the viewport padding so it's not clipped on safe-area sides */
         margin-left: calc(-1 * env(safe-area-inset-left));
         margin-right: calc(-1 * env(safe-area-inset-right));

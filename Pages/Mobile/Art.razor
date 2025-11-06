@@ -59,6 +59,16 @@
 
     <!-- Main image display area -->
     <div class="main-image-container">
+        <!-- Back button -->
+        <button class="gallery-nav-button back" @onclick="PreviousImage">
+            <img src="/gallery/mobile/back.png" alt="Back" />
+        </button>
+
+        <!-- Next button -->
+        <button class="gallery-nav-button next" @onclick="NextImage">
+            <img src="/gallery/mobile/next.png" alt="Next" />
+        </button>
+
         <div class="main-image @(isShowingCredits ? "credits-hidden" : "")" id="mainImage">
             <img src="@selectedImageUrl" alt="Selected artwork" @onload="OnImageLoaded" @onerror="OnImageError" class="@imageLoadingClass" />
         </div>
@@ -247,6 +257,42 @@ These animations were then edited together by Mosheer Nader.
         display: flex;
         align-items: center;
         justify-content: center;
+    }
+
+    /* Gallery navigation buttons */
+    .gallery-nav-button {
+        position: absolute;
+        top: 50px;
+        background: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        z-index: 10;
+        transition: all 0.3s ease;
+        opacity: 0.9;
+    }
+
+    .gallery-nav-button.back {
+        left: 10px;
+    }
+
+    .gallery-nav-button.next {
+        right: 10px;
+    }
+
+    .gallery-nav-button img {
+        height: 10px;
+        width: auto;
+        display: block;
+    }
+
+    .gallery-nav-button:hover {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+
+    .gallery-nav-button:active {
+        transform: scale(0.95);
     }
 
     .main-image {
