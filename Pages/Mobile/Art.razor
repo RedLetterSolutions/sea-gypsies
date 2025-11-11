@@ -59,16 +59,6 @@
 
     <!-- Main image display area -->
     <div class="main-image-container">
-        <!-- Back button -->
-        <button class="gallery-nav-button back" @onclick="PreviousImage">
-            <img src="/gallery/mobile/back.png" alt="Back" />
-        </button>
-
-        <!-- Next button -->
-        <button class="gallery-nav-button next" @onclick="NextImage">
-            <img src="/gallery/mobile/next.png" alt="Next" />
-        </button>
-
         <div class="main-image @(isShowingCredits ? "credits-hidden" : "")" id="mainImage">
             <img src="@selectedImageUrl" alt="Selected artwork" @onload="OnImageLoaded" @onerror="OnImageError" class="@imageLoadingClass" />
         </div>
@@ -80,6 +70,7 @@
         <div class="credits-overlay" @onclick="HideCredits">
             <div class="credits-modal" @onclick:stopPropagation="true">
                 <div class="credits-panel">
+                    <button class="credits-close-button" @onclick="HideCredits">×</button>
                     <p>
                        To help bring The Sea Gypsies to life, I worked closely with Joe Incorvaia, a colleague and talented art director, to work on the concept art. We started with nothing more than pencil sketches and ideas but rather than go down the traditional route, we decided to leverage the Midjourney and Runway AI generation tools to provide us with elements and environments we then carefully crafted into the vision I had for The Sea Gypsies.
 These animations were then edited together by Mosheer Nader.
@@ -87,16 +78,16 @@ These animations were then edited together by Mosheer Nader.
                     <p><span style="color: white;">Credits:</span>
                     <br/>
                     <br/>
-                    <span style="color: white;">Samual Mondragona</span>: Creative Direction design composition with AI Imagery and video generation <a href="https://www.artifexscripts.com">https://www.artifexscripts.com</a>
+                    <span style="color: white;">Samuel Mandragona</span>: Creative Direction design composition with AI Imagery and video generation <a href="https://www.artifexscripts.com">https://www.artifexscripts.com</a>
                     <br/>
                     <br/>
-                    <span style="color: white;">Joe Incorvaia</span>: Art Direction and AI image creation - <a href="https://sites.google.com/view/jincorvaia-ai/home">https://sites.google.com/view/jincorvaia-ai/home</a> 
+                    <span style="color: white;">Joe Incorvaia</span>: Art Direction and AI image creation - <a href="https://sites.google.com/view/jincorvaia-ai/home">https://sites.google.com/view/jincorvaia-ai/home</a>
                     <br/>
                     <br/>
                     <span style="color: white;">Mosheer Nader</span>: Animation design and composition - <a href="https://mosheer.com">https://mosheer.com</a>
                     <br/>
                     <br/>
-                    
+
                     <span style="color: white;">Red Letter Solutions</span>: Website production and support -  <a href="https://redlettersolutions.io">https://redlettersolutions.io</a>
                     </p>
                 </div>
@@ -108,8 +99,18 @@ These animations were then edited together by Mosheer Nader.
 
     <!-- Home button -->
     <div class="home-button-container">
+        <!-- Back button -->
+        <button class="gallery-nav-button back" @onclick="PreviousImage">
+            <img src="/gallery/mobile/back.png" alt="Back" />
+        </button>
+
         <button class="home-button" @onclick="NavigateToHome">
             <img src="/library/mobile/mobile_home.png" alt="Home" />
+        </button>
+
+        <!-- Next button -->
+        <button class="gallery-nav-button next" @onclick="NextImage">
+            <img src="/gallery/mobile/next.png" alt="Next" />
         </button>
     </div>
 
@@ -261,29 +262,20 @@ These animations were then edited together by Mosheer Nader.
 
     /* Gallery navigation buttons */
     .gallery-nav-button {
-        position: absolute;
-        top: 50px;
+        position: relative;
         background: none;
         border: none;
         padding: 0;
         cursor: pointer;
-        z-index: 10;
         transition: all 0.3s ease;
         opacity: 0.9;
     }
 
-    .gallery-nav-button.back {
-        left: 10px;
-    }
-
-    .gallery-nav-button.next {
-        right: 10px;
-    }
-
     .gallery-nav-button img {
-        height: 10px;
+        height: 15px;
         width: auto;
         display: block;
+        filter: brightness(0) invert(1);
     }
 
     .gallery-nav-button:hover {
@@ -368,9 +360,9 @@ These animations were then edited together by Mosheer Nader.
         position: relative;
         top: auto; bottom: auto; left: auto;
         transform: none;
-        width: 92%;
-        max-height: 80vh;
-        padding: 20px 24px;
+        width: 85%;
+        max-height: 70vh;
+        padding: 40px 20px 16px 20px;
         z-index: 1;
         background: linear-gradient(
             180deg,
@@ -382,11 +374,36 @@ These animations were then edited together by Mosheer Nader.
         box-shadow: 0 6px 24px rgba(0,0,0,0.4);
     }
 
+    .credits-close-button {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: none;
+        border: none;
+        color: #67f6ff;
+        font-size: 32px;
+        cursor: pointer;
+        padding: 0;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        line-height: 1;
+        z-index: 10;
+    }
+
+    .credits-close-button:hover {
+        color: #fff;
+        transform: rotate(90deg);
+    }
+
     /* Match desktop typography/colors */
     .credits-panel p {
         font-family: 'apotek-comp', sans-serif;
         text-align: center;
-        font-size: 25px;
+        font-size: 18px;
         letter-spacing: 0.5px;
         line-height: 1.1;
         color: #49abbd;
@@ -566,6 +583,10 @@ These animations were then edited together by Mosheer Nader.
         transform: translateX(-50%);
         z-index: 100;
         pointer-events: auto; /* Ensure it can receive clicks */
+        display: flex;
+        align-items: center;
+        gap: 60px;
+        width: auto;
     }
 
     .home-button {
@@ -970,6 +991,12 @@ These animations were then edited together by Mosheer Nader.
 
     private void ToggleMenu()
     {
+        // Close the credits popup if it's open
+        if (isShowingCredits)
+        {
+            isShowingCredits = false;
+        }
+
         isMenuOpen = !isMenuOpen;
     }
 

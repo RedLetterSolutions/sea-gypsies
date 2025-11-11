@@ -553,6 +553,12 @@
 
     private void ToggleMenu()
     {
+        // Close the download form if it's open
+        if (showDownloadFormModal)
+        {
+            showDownloadFormModal = false;
+        }
+
         isMenuOpen = !isMenuOpen;
     }
 
@@ -561,9 +567,9 @@
         isMenuOpen = false;
     }
 
-    private void OpenScriptViewer()
+    private async Task OpenScriptViewer()
     {
-        showScriptViewer = true;
+        await JSRuntime.InvokeVoidAsync("open", "/library/SEA GYPSIES FEATURE SCREENPLAY.pdf", "_blank");
     }
 
     private void CloseScriptViewer()
