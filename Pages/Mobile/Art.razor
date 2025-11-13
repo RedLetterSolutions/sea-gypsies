@@ -201,7 +201,7 @@ These animations were then edited together by Mosheer Nader.
     /* Gallery Logo */
     .gallery-logo {
         position: absolute;
-        top: 20px;
+        top: 16px; /* slightly closer to nav bar, similar to Library visual spacing */
         left: 50%;
         transform: translateX(-50%);
         z-index: 3;
@@ -209,8 +209,8 @@ These animations were then edited together by Mosheer Nader.
     }
 
     .gallery-logo .logo-image {
-        width: 100%;
-        max-width: 250px;
+        width: auto;
+        max-width: 320px; /* bigger fixed size that works on mobile */
         height: auto;
         opacity: 0.9;
         filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
@@ -219,10 +219,9 @@ These animations were then edited together by Mosheer Nader.
     .gallery-logo .gallery-title {
         color: #ffffff;
         font-family: 'apotek-comp', sans-serif;
-        font-size: 20px;
-        font-weight: 400;
-        letter-spacing: 10px;
-        @* margin: 8px 0 0 0; *@
+        font-size: 42px; /* increased from 16px */
+        font-weight: 200;
+        letter-spacing: 8px; /* increased from 6px for better spacing at larger size */
         text-align: center;
         text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
     }
@@ -230,7 +229,7 @@ These animations were then edited together by Mosheer Nader.
     /* Gallery Description */
     .gallery-description {
         position: absolute;
-        top: 12vh;
+        top: 16vh;
         left: 5%;
         width: 90%;
         z-index: 3;
