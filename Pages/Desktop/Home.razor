@@ -26,6 +26,10 @@
 </div>
 </div>
 
+<!-- Contact Form Modal -->
+<ContactForm IsOpen="@showContactForm" OnCancel="@CloseContactForm" />
+
+
 <style>
     html, body, #app { 
         height: 100%; 
@@ -95,6 +99,8 @@
     [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
     [Inject] private NavigationManager Navigation { get; set; } = default!;
 
+    private bool showContactForm = false;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -134,9 +140,14 @@
         await JSRuntime.InvokeVoidAsync("navigateWithTransition", "/desktop/art", "right");
     }
 
-    private async Task OpenContact()
+    private void OpenContact()
     {
-        // Navigate to Library and open form; the Library page binds the same overlay form
-        await JSRuntime.InvokeVoidAsync("navigateWithTransition", "/desktop/library?openContact=1", "up");
+        showContactForm = true;
+    }
+
+    private Task CloseContactForm()
+    {
+        showContactForm = false;
+        return Task.CompletedTask;
     }
 }

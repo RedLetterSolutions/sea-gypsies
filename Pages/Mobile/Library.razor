@@ -17,16 +17,13 @@
 </div>
 
 <div class="viewport">
-    <div class="overflow-bg-blur" aria-hidden="true"></div>
-    <div class="library-container">
-        <img src="/library/mobile/background.jpg" alt="The Sea Gypsies Library" class="background-image" />
-        
-        <!-- Clickable hotspots -->
-        <div class="hotspot read-script-hotspot" @onclick="OpenScriptViewer"></div>
-        <div class="hotspot download-script-hotspot" @onclick="ShowDownloadForm"></div>
-        <div class="hotspot watch-video-hotspot" @onclick="OpenVideoPlayer"></div>
-        <div class="hotspot home-button-hotspot" @onclick="NavigateToHome"></div>
-    </div>
+<div class="library-container">
+
+    <!-- Clickable hotspots -->
+    <div class="hotspot read-script-hotspot" @onclick="OpenScriptViewer"></div>
+    <div class="hotspot download-script-hotspot" @onclick="ShowDownloadForm"></div>
+    <div class="hotspot watch-video-hotspot" @onclick="OpenVideoPlayer"></div>
+    <div class="hotspot home-button-hotspot" @onclick="NavigateToHome"></div>
 
     <!-- Mobile Navigation Menu (moved out of clipped container) -->
     <div class="nav-menu @(isMenuOpen ? "open" : "")">
@@ -44,11 +41,12 @@
                     THE LIBRARY
                 </a>
                 <a href="/mobile/art" class="nav-link" @onclick="CloseMenu">
-                    THE ART
+                    THE GALLERY
                 </a>
             </nav>
         </div>
     </div>
+</div>
 </div>
 
 <!-- PDF Script Viewer Modal -->
@@ -107,69 +105,42 @@
         height: 100%;
         margin: 0;
         padding: 0;
-        background: #000;
+        background: #000; /* letterbox color */
         overflow: hidden;
+        position: fixed; /* Prevent any scrolling behavior */
+        width: 100%;
     }
 
     .viewport {
         position: fixed;
         inset: 0;
-        display: grid;
-        place-items: center;
-        /* Push content below the fixed top bar and clear dynamic browser bottom bar */
+        overflow: hidden;
+        /* Space for global navbar and clear dynamic browser bottom bar */
         --mobile-bottom-pad: calc(env(safe-area-inset-bottom) + 14px);
-        padding: calc(env(safe-area-inset-top) + 60px)
-                 env(safe-area-inset-right)
-                 var(--mobile-bottom-pad)
-                 env(safe-area-inset-left);
-        /* Overflow background so letterboxing shows image instead of black */
-        --overflow-bg: url('/sea_background.jpeg');
-        background-color: #000;
-        /* Include soft vignette as a background layer so it never overlays content */
-        background-image: radial-gradient(ellipse at center,
-                              rgba(0,0,0,0) 55%,
-                              rgba(0,0,0,0.25) 80%,
-                              rgba(0,0,0,0.4) 100%),
-                          var(--overflow-bg);
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
+        padding: 60px env(safe-area-inset-right) var(--mobile-bottom-pad) env(safe-area-inset-left);
+        background-color: #000; /* Fallback */
     }
 
-    /* Blurred overflow background layer (DOM element avoids iOS filter stacking quirks) */
+    /* Hide the overflow background - not needed for full-screen layout */
     .overflow-bg-blur {
-        position: absolute;
-        inset: 0;
-        background-image: var(--overflow-bg);
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        filter: blur(0px);
-        transform: scale(1); /* no scale needed without blur */
-        /* Extend under the viewport padding so it's not clipped on safe-area sides */
-        margin-left: calc(-1 * env(safe-area-inset-left));
-        margin-right: calc(-1 * env(safe-area-inset-right));
-        margin-top: calc(-1 * (env(safe-area-inset-top) + 60px));
-        margin-bottom: calc(-1 * var(--mobile-bottom-pad));
-        z-index: 0; /* behind main content */
-        pointer-events: none;
+        display: none;
     }
 
     .library-container {
         position: relative;
-        /* Maintain 9:16 stage while respecting the 60px top bar and bottom browser UI */
-        width: min(100vw, calc((100dvh - 60px - var(--mobile-bottom-pad)) * 9 / 16));
-        height: min(calc(100vw * 16 / 9), calc(100dvh - 60px - var(--mobile-bottom-pad)));
-        aspect-ratio: 9 / 16;
+        width: 100vw;
+        height: calc(100dvh - 60px - var(--mobile-bottom-pad));
+        --stage-height: calc(100dvh - 60px - var(--mobile-bottom-pad));
         overflow: hidden;
-        z-index: 1; /* ensure it sits above blurred layer */
+        background-color: #000;
+        background-image: url('/library/mobile/background.jpg');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
     }
 
     .background-image {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
+        display: none; /* Hide the img element, using CSS background instead */
     }
 
     /* Clickable hotspots */

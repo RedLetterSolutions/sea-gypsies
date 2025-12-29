@@ -35,7 +35,7 @@
                     THE LIBRARY
                 </a>
                 <a href="/mobile/art" class="nav-link active" @onclick="CloseMenu">
-                    THE ART
+                    THE GALLERY
                 </a>
             </nav>
         </div>
@@ -46,14 +46,14 @@
         <div class="gallery-bg-layer" id="galleryBgB"></div>
     </div>
 
-    <!-- Logo at top -->
-    <div class="gallery-logo">
+    <!-- Logo at top - hidden since it's in background image -->
+    <div class="gallery-logo" style="display: none;">
         <img src="logo.png" alt="The Sea Gypsies" class="logo-image" />
         <h1 class="gallery-title">THE GALLERY</h1>
     </div>
 
-    <!-- Description text -->
-    <div class="gallery-description">
+    <!-- Description text - hidden since it's in background image -->
+    <div class="gallery-description" style="display: none;">
         <p>Scroll through the collection of concept art and production design for the Sea Gypsies</p>
     </div>
 
@@ -307,6 +307,8 @@ These animations were then edited together by Mosheer Nader.
         border-radius: 4px;
         transition: opacity 0.3s ease-in-out;
         opacity: 1;
+        border: 2px solid #67f6ff;
+        box-shadow: 0 0 10px rgba(103, 246, 255, 0.3);
     }
 
     .main-image img.loading {

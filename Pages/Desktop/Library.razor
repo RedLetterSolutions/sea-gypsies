@@ -18,6 +18,15 @@
       @onmouseleave="ShowDefault"
       @onclick="OpenScript"></div>
 
+    <div class="hotspot script-image-hotspot"
+         @onclick="OpenScriptInNewTab"></div>
+
+    @if (!showVideo)
+    {
+        <div class="hotspot script-large-hotspot"
+             @onclick="OpenScriptInNewTab"></div>
+    }
+
     <div class="hotspot download-hotspot"
          @onmouseenter="ShowDownloadHover"
          @onmouseleave="ShowDefault"
@@ -120,6 +129,8 @@
   }
 
   .read-hotspot { left: 3.91%; top: 16.67%; width: 26.72%; height: 3.70%; }
+  .script-image-hotspot { left: 8.96%; top: 24.35%; width: 14.06%; height: 32.50%; }
+  .script-large-hotspot { left: 33.85%; top: 22.22%; width: 61.77%; height: 62.69%; }
   .download-hotspot { left: 3.18%; top: 57.87%; width: 26.62%; height: 5.46%; }
   .watch-hotspot { left: 7.08%; top: 73.24%; width: 18.23%; height: 18.52%; }
   .home-hotspot { left: 1.3%; top: 90.13%; width: 60px; height: 60px; }
@@ -274,6 +285,10 @@
   private async Task ShowDefault() => await JSRuntime.InvokeVoidAsync("setLibraryBackground", "library/library_default.png");
 
   private void OpenScript() { showVideo = false; showScript = true; }
+  private async Task OpenScriptInNewTab()
+  {
+    await JSRuntime.InvokeVoidAsync("open", "/library/SEA GYPSIES COMPLETE SCRIPT MASTER.pdf", "_blank");
+  }
   private void OpenVideo() { showScript = false; showVideo = true; }
   private void CloseContent() { showScript = false; showVideo = false; }
 
