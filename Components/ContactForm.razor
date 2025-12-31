@@ -1,5 +1,6 @@
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Components
+@implements IDisposable
 
 @if (IsOpen)
 {
@@ -13,7 +14,7 @@
         <h1 class="cf-title">CONTACT US</h1>
         <p class="cf-subtitle">We'd love to hear from you:</p>
 
-        <form id="contactUsForm">
+        <form data-rls-contact="sea_gypsies" data-rls-redirect="false" id="contactUsForm" data-rls-on-success="handleContactSuccess" data-rls-on-error="handleContactError">
           <!-- Honeypot (spam protection) -->
           <input type="text" name="_hp" style="display:none;" tabindex="-1" autocomplete="off">
 
@@ -61,10 +62,54 @@
 @code {
   [Parameter] public bool IsOpen { get; set; }
   [Parameter] public EventCallback OnCancel { get; set; }
+  [Inject] private NavigationManager Nav { get; set; } = default!;
+  [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+  private bool _initForOpen;
+  private DotNetObjectReference<ContactForm>? _selfRef;
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (firstRender)
+    {
+      // Register this component instance so JS can close the modal on success
+      _selfRef = DotNetObjectReference.Create(this);
+      await JSRuntime.InvokeVoidAsync("setContactFormPageRef", _selfRef);
+    }
+
+    if (IsOpen && !_initForOpen)
+    {
+      try
+      {
+        await JSRuntime.InvokeVoidAsync("initContactUsForm");
+        await JSRuntime.InvokeVoidAsync("bindRLSOnce");
+        _initForOpen = true;
+      }
+      catch (Exception ex)
+      {
+        Console.WriteLine($"Error initializing form: {ex.Message}");
+      }
+    }
+    else if (!IsOpen && _initForOpen)
+    {
+      _initForOpen = false; // reset for next open
+    }
+  }
+
+  [JSInvokable]
+  public void CloseContactFormFromJS()
+  {
+    OnCancel.InvokeAsync();
+    StateHasChanged();
+  }
 
   private async Task HandleOverlayClick()
   {
     await OnCancel.InvokeAsync();
+  }
+
+  public void Dispose()
+  {
+    _selfRef?.Dispose();
   }
 }
 

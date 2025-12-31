@@ -86,6 +86,9 @@
 </div>
 </div>
 
+<!-- Contact Form Modal -->
+<ContactForm IsOpen="@showContactForm" OnCancel="@CloseContactForm" />
+
 <style>
     html, body, #app {
         height: 100%;
@@ -180,13 +183,13 @@
         z-index: 2;
         display: flex;
         flex-direction: column;
-        justify-content: center;
+        justify-content: flex-start;
         gap: 12px;
         color: #49abbd;
         background: transparent; /* no background */
         border: none; /* no border */
         border-radius: 0;
-        padding: 8px 0; /* minimal padding */
+        padding: 20px 10px; /* padding to prevent cutoff */
         box-shadow: none; /* no shadow */
         overflow: auto;
     }
@@ -209,6 +212,7 @@
 
     .credits-panel p {
         font-family: 'apotek-comp', sans-serif;
+        font-weight: 100;
         text-align: center;
         font-size: 40px;
         letter-spacing: 0.5px;
@@ -368,6 +372,26 @@
         background: rgba(255, 255, 255, 0.6);
     }
 
+    /* Custom scrollbar for credits panel (matching thumbnails) */
+    .credits-panel::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .credits-panel::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+        margin: 15px 0;
+    }
+
+    .credits-panel::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.4);
+        border-radius: 3px;
+    }
+
+    .credits-panel::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.6);
+    }
+
     /* Navigation buttons */
     .nav-button {
         position: absolute;
@@ -421,6 +445,7 @@
     private bool isImageLoading = false;
     private string imageLoadingClass => isImageLoading ? "loading" : "";
     private bool isShowingCredits = false;
+    private bool showContactForm = false;
 
     private List<GalleryImage> galleryImages = new List<GalleryImage>
     {
@@ -649,8 +674,14 @@
         public string FullUrl { get; set; } = "";
     }
 
-    private async Task OpenContact()
+    private void OpenContact()
     {
-        await JSRuntime.InvokeVoidAsync("navigateWithTransition", "/desktop/library?openContact=1", "up");
+        showContactForm = true;
+    }
+
+    private Task CloseContactForm()
+    {
+        showContactForm = false;
+        return Task.CompletedTask;
     }
 }

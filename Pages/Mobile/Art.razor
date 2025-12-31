@@ -580,15 +580,14 @@ These animations were then edited together by Mosheer Nader.
     /* Home Button */
     .home-button-container {
         position: absolute;
-        bottom: 20px; /* Position in bottom half of page */
-        left: 50%;
-        transform: translateX(-50%);
+        bottom: 30px;
+        left: 5%; /* Align with thumbnail container left edge */
+        width: 90%; /* Match thumbnail container width */
         z-index: 100;
-        pointer-events: auto; /* Ensure it can receive clicks */
+        pointer-events: auto;
         display: flex;
         align-items: center;
-        gap: 60px;
-        width: auto;
+        justify-content: space-between; /* Spread buttons to edges */
     }
 
     .home-button {

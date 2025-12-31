@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 @using Microsoft.JSInterop
 @using Microsoft.AspNetCore.Components.Web
+@using SeaGypsies.Components
 
 <PageTitle>The Sea Gypsies - Library</PageTitle>
 
@@ -42,6 +43,7 @@
          @onmouseleave="ShowDefault"
          @onclick="NavigateHome"></div>
 
+    <ContactButton OnClick="OpenContact" />
 
     <!-- Default Content Area -->
     @if (!showScript && !showVideo)
@@ -77,6 +79,9 @@
     <SeaGypsies.Pages.Desktop.DownloadScriptForm
       IsOpen="@showDownloadForm"
       OnCancel="@HideDownloadForm" />
+
+    <!-- Contact Form Modal -->
+    <ContactForm IsOpen="@showContactForm" OnCancel="@CloseContactForm" />
 
   </div>
 </div>
@@ -237,6 +242,7 @@
   private bool showScript = false;
   private bool showVideo = false;
   private bool showDownloadForm = false;
+  private bool showContactForm = false;
   private string scriptUrl = "library/SEA GYPSIES COMPLETE SCRIPT MASTER.pdf";
   private DotNetObjectReference<Library>? _selfRef;
 
@@ -307,6 +313,17 @@
   {
     showDownloadForm = false;
     StateHasChanged();
+  }
+
+  private void OpenContact()
+  {
+    showContactForm = true;
+  }
+
+  private Task CloseContactForm()
+  {
+    showContactForm = false;
+    return Task.CompletedTask;
   }
 
   private async Task NavigateHome() => await JSRuntime.InvokeVoidAsync("navigateWithTransition", "/desktop", "right");

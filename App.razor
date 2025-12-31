@@ -250,21 +250,46 @@
             }
         }
 
+        // JS <-> Blazor interop for closing the contact form
+        window.setContactFormPageRef = function(dotNetRef) {
+            window.__contactFormPageRef = dotNetRef;
+        }
+        window.closeContactFormFromJS = function() {
+            if (window.__contactFormPageRef) {
+                window.__contactFormPageRef.invokeMethodAsync('CloseContactFormFromJS');
+            }
+        }
+
         // Success handler for contact form (close modal after success)
         window.handleContactSuccess = function(result) {
             console.log('Contact form submitted successfully:', result);
+
+            // Determine which form was submitted
+            const downloadForm = document.getElementById('seaGypsiesForm');
+            const contactForm = document.getElementById('contactUsForm');
+
+            let isDownloadForm = false;
+
             try {
-                const form = document.getElementById('seaGypsiesForm');
-                if (form) {
-                    form.reset();
+                if (downloadForm && downloadForm.offsetParent !== null) {
+                    // Download form is visible
+                    downloadForm.reset();
+                    isDownloadForm = true;
+                } else if (contactForm && contactForm.offsetParent !== null) {
+                    // Contact form is visible
+                    contactForm.reset();
+                    isDownloadForm = false;
                 }
             } catch {}
-            // Close the modal via Blazor
-            window.closeDownloadFormFromJS && window.closeDownloadFormFromJS();
-            // Show success toast
-            try {
+
+            // Close the appropriate modal and show the right message
+            if (isDownloadForm) {
+                window.closeDownloadFormFromJS && window.closeDownloadFormFromJS();
                 window.showToast && window.showToast('Thanks! Your script request has been sent. Check your email for the download link.');
-            } catch {}
+            } else {
+                window.closeContactFormFromJS && window.closeContactFormFromJS();
+                window.showToast && window.showToast('Thanks! Your message has been sent. We\'ll get back to you soon.');
+            }
             return true;
         };
 
@@ -350,6 +375,43 @@
 
             console.log('Form initialized successfully');
         };
+
+        // Initialize the Contact Us form
+        window.initContactUsForm = function() {
+            // Make sure vendor is initialized once (when modal appears)
+            try {
+                if (!window.ensureRLSInited || !window.ensureRLSInited()) {
+                    // Retry shortly if the script hasn't finished loading yet
+                    setTimeout(() => { try { window.ensureRLSInited && window.ensureRLSInited(); } catch {} }, 150);
+                }
+            } catch {}
+
+            const form = document.getElementById('contactUsForm');
+            if (!form) {
+                console.log('Contact form not found');
+                return;
+            }
+            if (form.dataset.rlsInit === '1') {
+                console.log('Contact form already initialized');
+                return;
+            }
+            form.dataset.rlsInit = '1';
+            console.log('Initializing Contact Us form...');
+
+            // Disable close/cancel while submitting
+            form.addEventListener('submit', function(e) {
+                try {
+                    const cancelBtn = form.querySelector('.cf-cancel');
+                    const sendBtn = form.querySelector('.cf-send');
+                    const closeBtn = document.querySelector('.cf-close');
+                    if (cancelBtn) { cancelBtn.setAttribute('disabled', 'true'); cancelBtn.setAttribute('aria-disabled', 'true'); }
+                    if (closeBtn) { closeBtn.setAttribute('disabled', 'true'); closeBtn.setAttribute('aria-disabled', 'true'); }
+                    if (sendBtn) { sendBtn.setAttribute('aria-busy', 'true'); }
+                } catch {}
+            }, false);
+
+            console.log('Contact form initialized successfully');
+        };
     </script>
     <script>
         // Ambient Music Player
@@ -357,7 +419,7 @@
             const audio = document.getElementById('ambientMusic');
             const toggleBtn = document.getElementById('musicToggle');
             const musicIcon = document.getElementById('musicIcon');
-            
+
             if (!audio || !toggleBtn) return;
 
             // Set initial volume
@@ -365,7 +427,7 @@
 
             // Try to autoplay (may be blocked by browser)
             const playPromise = audio.play();
-            
+
             if (playPromise !== undefined) {
                 playPromise.then(() => {
                     // Autoplay started successfully
@@ -391,7 +453,7 @@
             function updateMusicIcon(isPlaying) {
                 const waveIcon = musicIcon.querySelector('.wave-icon');
                 const pauseIcon = musicIcon.querySelector('.pause-icon');
-                
+
                 if (isPlaying) {
                     musicIcon.classList.add('playing');
                     musicIcon.classList.remove('paused');
@@ -675,18 +737,10 @@
         50% { opacity: 0.5; }
     }
 
-    /* Responsive positioning */
+    /* Hide on mobile */
     @@media (max-width: 768px) {
         .music-control {
-            bottom: 20px;
-            right: 20px;
-            width: 50px;
-            height: 50px;
-        }
-
-        .music-icon {
-            width: 24px;
-            height: 24px;
+            display: none !important;
         }
     }
 
