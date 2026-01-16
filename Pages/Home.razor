@@ -58,36 +58,15 @@
         {
             try
             {
-                // Detect device type: 'phone', 'tablet', or 'desktop'
-                var deviceType = await JSRuntime.InvokeAsync<string>("detectDeviceType");
-
-                // Phones go to mobile version, tablets and desktops go to desktop version
-                // Tablets in portrait will see a "rotate to landscape" overlay in App.razor
-                if (deviceType == "phone")
-                {
-                    Navigation.NavigateTo("/mobile", forceLoad: true);
-                }
-                else
-                {
-                    // Both tablet and desktop use the desktop version
-                    Navigation.NavigateTo("/desktop", forceLoad: true);
-                }
+                // All devices now use the desktop version
+                // Phones and tablets in portrait will see a "rotate to landscape" overlay in App.razor
+                Navigation.NavigateTo("/desktop", forceLoad: true);
             }
             catch (Exception ex)
             {
-                // Log error and fallback to screen size check
-                Console.WriteLine($"Device detection error: {ex.Message}");
-                try
-                {
-                    // Fallback: check screen width only
-                    var isSmallScreen = await JSRuntime.InvokeAsync<bool>("eval", "window.innerWidth <= 768");
-                    Navigation.NavigateTo(isSmallScreen ? "/mobile" : "/desktop", forceLoad: true);
-                }
-                catch
-                {
-                    // Final fallback to desktop
-                    Navigation.NavigateTo("/desktop", forceLoad: true);
-                }
+                // Log error and fallback to desktop
+                Console.WriteLine($"Navigation error: {ex.Message}");
+                Navigation.NavigateTo("/desktop", forceLoad: true);
             }
         }
     }
