@@ -66,6 +66,37 @@
             height: 100vh;
         }
 
+        /* Rotate-to-landscape overlay for tablets in portrait */
+        #rotate-to-landscape-overlay {
+            position: fixed;
+            inset: 0;
+            background: #0e1a20;
+            color: #e6f7fb;
+            display: none; /* toggled via JS */
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            z-index: 2147483647; /* Above everything */
+            padding: 24px;
+        }
+        #rotate-to-landscape-overlay .content {
+            max-width: 24rem;
+        }
+        #rotate-to-landscape-overlay h2 {
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        #rotate-to-landscape-overlay p {
+            opacity: 0.85;
+            line-height: 1.35;
+        }
+        /* Prevent scroll when overlay is visible */
+        body.portrait-block {
+            overflow: hidden;
+            height: 100vh;
+        }
+
         /* Success Toast */
         #sgToast {
             position: fixed;
@@ -113,11 +144,19 @@
 
 <body>
 
-    <!-- Shown only on small touch devices when in landscape -->
+    <!-- Shown only on small touch devices (phones) when in landscape -->
     <div id="rotate-to-portrait-overlay" role="dialog" aria-live="polite" aria-label="Portrait mode required">
         <div class="content">
             <h2>Please rotate your device</h2>
             <p>This experience is optimized for portrait on mobile. Turn your device upright to continue.</p>
+        </div>
+    </div>
+
+    <!-- Shown only on tablets when in portrait -->
+    <div id="rotate-to-landscape-overlay" role="dialog" aria-live="polite" aria-label="Landscape mode required">
+        <div class="content">
+            <h2>Please rotate your device</h2>
+            <p>This experience is optimized for landscape on tablets. Turn your device sideways to continue.</p>
         </div>
     </div>
 
@@ -184,20 +223,54 @@
             } catch { /* noop */ }
         })();
 
-        // Block landscape on small touch devices by showing an overlay
-        (function enablePortraitOnlyUX() {
+        // Block landscape on phones and portrait on tablets by showing overlays
+        (function enableOrientationUX() {
             const isCoarsePointer = () => window.matchMedia('(pointer: coarse)').matches;
-            const isSmallViewport = () => Math.min(window.innerWidth, window.innerHeight) <= 900; // phone + many small tablets
-            const isMobileish = () => isCoarsePointer() && isSmallViewport();
+            const hasTouch = () => 'ontouchstart' in window || navigator.maxTouchPoints > 0;
             const isLandscape = () => window.matchMedia('(orientation: landscape)').matches;
+            const isPortrait = () => window.matchMedia('(orientation: portrait)').matches;
 
-            const overlay = document.getElementById('rotate-to-portrait-overlay');
-            if (!overlay) return;
+            // Detect device type using screen dimensions
+            const getDeviceType = () => {
+                if (!isCoarsePointer() && !hasTouch()) return 'desktop';
+
+                // Use min/max to get consistent dimensions regardless of orientation
+                const screenWidth = Math.max(window.innerWidth, window.innerHeight);
+                const screenHeight = Math.min(window.innerWidth, window.innerHeight);
+                const minDimension = screenHeight;
+
+                // Phone: small screen (min dimension < 600px)
+                // Tablet: medium screen (min dimension >= 600px, max >= 900px)
+                if (minDimension < 600 || screenWidth < 768) {
+                    return 'phone';
+                } else if (minDimension >= 600 && screenWidth >= 900) {
+                    return 'tablet';
+                }
+                return 'desktop';
+            };
+
+            const portraitOverlay = document.getElementById('rotate-to-portrait-overlay');
+            const landscapeOverlay = document.getElementById('rotate-to-landscape-overlay');
 
             function update() {
-                const shouldBlock = isMobileish() && isLandscape();
-                overlay.style.display = shouldBlock ? 'flex' : 'none';
-                document.body.classList.toggle('landscape-block', shouldBlock);
+                const deviceType = getDeviceType();
+                const landscape = isLandscape();
+                const portrait = isPortrait();
+
+                // Phone in landscape: show "rotate to portrait"
+                const shouldBlockPhone = deviceType === 'phone' && landscape;
+                // Tablet in portrait: show "rotate to landscape"
+                const shouldBlockTablet = deviceType === 'tablet' && portrait;
+
+                if (portraitOverlay) {
+                    portraitOverlay.style.display = shouldBlockPhone ? 'flex' : 'none';
+                }
+                if (landscapeOverlay) {
+                    landscapeOverlay.style.display = shouldBlockTablet ? 'flex' : 'none';
+                }
+
+                document.body.classList.toggle('landscape-block', shouldBlockPhone);
+                document.body.classList.toggle('portrait-block', shouldBlockTablet);
             }
 
             // Initial check and on changes

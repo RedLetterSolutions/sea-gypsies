@@ -17,6 +17,15 @@ if (!string.IsNullOrWhiteSpace(portEnv))
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+builder.Services.AddOutputCache(options =>
+{
+    options.AddPolicy("Public60", policy => policy
+        .Expire(TimeSpan.FromSeconds(60)));
+
+    options.AddPolicy("Public300", policy => policy
+        .Expire(TimeSpan.FromMinutes(5)));
+});
+
 // Response compression for static assets and SignalR fallback
 builder.Services.AddResponseCompression(options =>
 {
@@ -63,6 +72,8 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 });
 
 app.UseHttpsRedirection();
+
+app.UseOutputCache();
 
 // Compression should happen before serving static files
 app.UseResponseCompression();

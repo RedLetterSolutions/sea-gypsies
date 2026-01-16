@@ -58,15 +58,18 @@
         {
             try
             {
-                // Detect if mobile device using dedicated function
-                var isMobile = await JSRuntime.InvokeAsync<bool>("detectMobileDevice");
+                // Detect device type: 'phone', 'tablet', or 'desktop'
+                var deviceType = await JSRuntime.InvokeAsync<string>("detectDeviceType");
 
-                if (isMobile)
+                // Phones go to mobile version, tablets and desktops go to desktop version
+                // Tablets in portrait will see a "rotate to landscape" overlay in App.razor
+                if (deviceType == "phone")
                 {
                     Navigation.NavigateTo("/mobile", forceLoad: true);
                 }
                 else
                 {
+                    // Both tablet and desktop use the desktop version
                     Navigation.NavigateTo("/desktop", forceLoad: true);
                 }
             }
