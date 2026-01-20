@@ -22,12 +22,6 @@
     <div class="hotspot script-image-hotspot"
          @onclick="OpenScriptInNewTab"></div>
 
-    @if (!showVideo)
-    {
-        <div class="hotspot script-large-hotspot"
-             @onclick="OpenScriptInNewTab"></div>
-    }
-
     <div class="hotspot download-hotspot"
          @onmouseenter="ShowDownloadHover"
          @onmouseleave="ShowDefault"
@@ -45,11 +39,11 @@
 
     <ContactButton OnClick="OpenContact" />
 
-    <!-- Default Content Area -->
+    <!-- Default Content Area - clickable to open PDF viewer -->
     @if (!showScript && !showVideo)
     {
-      <div class="content-area-placeholder">
-        <img src="library/script_cover.jpeg" alt="Script Cover" class="placeholder-image" />
+      <div class="content-area-placeholder" @onclick="OpenScript">
+        <img src="library/script_cover.jpeg" alt="Script Cover - Click to read" class="placeholder-image" />
       </div>
     }
 
@@ -105,8 +99,8 @@
 
   .library-container {
     position: relative;
-    width: min(100vw, calc(100vh * 16 / 9));
-    height: min(calc(100vw * 9 / 16), 100vh);
+    width: min(100vw, calc(100dvh * 16 / 9));
+    height: min(calc(100vw * 9 / 16), 100dvh);
     aspect-ratio: 16 / 9;
     overflow: hidden;
   }
@@ -152,14 +146,15 @@
     overflow: hidden;
   }
 
-  /* Placeholder content area - same as video/PDF */
+  /* Placeholder content area - same as video/PDF, clickable to open script */
   .content-area-placeholder {
     position: absolute;
-  left: 33.8%;
+    left: 33.8%;
     top: 22.29%;
     width: 61.8%;
     height: 62.57%;
     z-index: 20;
+    cursor: pointer;
   }
 
   .content-close {
