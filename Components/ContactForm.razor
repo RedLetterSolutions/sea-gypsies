@@ -12,7 +12,8 @@
 
       <div class="cf-content">
         <h1 class="cf-title">CONTACT US</h1>
-        <p class="cf-subtitle">We'd love to hear from you:</p>
+        <p class="cf-phone">CALL US: <a href="tel:6098195921" class="cf-phone-link">(609) 819-5921</a></p>
+        <p class="cf-subtitle">Or fill out the form below:</p>
 
         <form data-rls-contact="sea_gypsies" data-rls-redirect="false" id="contactUsForm" data-rls-on-success="handleContactSuccess" data-rls-on-error="handleContactError">
           <!-- Honeypot (spam protection) -->
@@ -143,6 +144,24 @@
     -webkit-overflow-scrolling: touch;
   }
 
+  .cf-container::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .cf-container::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+  }
+
+  .cf-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 3px;
+  }
+
+  .cf-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.6);
+  }
+
   /* Close button - top right with custom icon */
   .cf-close {
     position: absolute;
@@ -187,6 +206,27 @@
     color: #ffffff;
     margin: 0 0 5px 0;
     text-align: left;
+  }
+
+  /* Phone number */
+  .cf-phone {
+    font-family: 'apotek-comp', system-ui, -apple-system, sans-serif;
+    font-size: clamp(16px, 1.5vw, 25px);
+    font-weight: 300;
+    letter-spacing: 3px;
+    color: #ffffff;
+    margin: 0 0 10px 0;
+    text-align: left;
+  }
+
+  .cf-phone-link {
+    color: #00d4ff;
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .cf-phone-link:hover {
+    color: #00ffff;
   }
 
   /* Subtitle */
