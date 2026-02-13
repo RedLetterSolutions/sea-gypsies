@@ -239,16 +239,6 @@
             return false;
         }
 
-        // Minimal helper to (re)initialize RLS binding once when modal opens (guarded per session)
-        window.bindRLSOnce = function() {
-            try {
-                if (window.__rlsInitedOnce) return; // prevent duplicate vendor handlers
-                if (window.RLSContact && typeof window.RLSContact.init === 'function') {
-                    window.RLSContact.init({ siteId: 'sea_gypsies' });
-                    window.__rlsInitedOnce = true;
-                }
-            } catch (e) { console.error('[RLS] bind once error:', e); }
-        }
         // JS <-> Blazor interop for closing the download form
         window.setDownloadFormPageRef = function(dotNetRef) {
             window.__downloadFormPageRef = dotNetRef;
