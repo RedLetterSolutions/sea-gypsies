@@ -558,7 +558,8 @@
             if (selectedThumbnail) {
                 selectedThumbnail.scrollIntoView({
                     behavior: 'smooth',
-                    block: 'center'
+                    block: 'nearest',
+                    inline: 'center'
                 });
             }
         };
