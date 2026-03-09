@@ -193,13 +193,14 @@
 
   /* Content area with padding */
   .cf-content {
+    --cf-heading-font-size: clamp(32px, 3vw, 40px);
     padding: 60px 80px 50px 80px;
   }
 
   /* Title styling */
   .cf-title {
     font-family: 'apotek-comp', system-ui, -apple-system, sans-serif;
-    font-size: clamp(32px, 3vw, 40px);
+    font-size: var(--cf-heading-font-size);
     font-weight: 100;
     letter-spacing: 15px;
     text-transform: uppercase;
@@ -221,6 +222,7 @@
 
   .cf-phone-link {
     color: #00d4ff;
+    font-size: var(--cf-heading-font-size);
     text-decoration: none;
     transition: color 0.2s ease;
   }
@@ -466,8 +468,9 @@
       padding: 16px 24px 12px 24px;
     }
 
+    .cf-content { --cf-heading-font-size: 20px; }
+
     .cf-title {
-      font-size: 20px;
       letter-spacing: 6px;
       margin-bottom: 2px;
     }
@@ -529,8 +532,9 @@
       padding: 28px 40px 20px 40px;
     }
 
+    .cf-content { --cf-heading-font-size: 28px; }
+
     .cf-title {
-      font-size: 28px;
       letter-spacing: 8px;
     }
 
