@@ -25,6 +25,10 @@
     <div class="hotspot watch-video-hotspot" @onclick="OpenVideoPlayer"></div>
     <div class="hotspot home-button-hotspot" @onclick="NavigateToHome"></div>
 
+    <button class="pitch-deck-button-mobile" @onclick="OpenPitchDeck">
+        DOWNLOAD <span class="pd-diamond">&#9670;</span> THE PITCH DECK
+    </button>
+
     <!-- Mobile Navigation Menu (moved out of clipped container) -->
     <div class="nav-menu @(isMenuOpen ? "open" : "")">
         <div class="nav-overlay" @onclick="CloseMenu"></div>
@@ -59,12 +63,12 @@
                 <button class="close-button" @onclick="CloseScriptViewer">×</button>
             </div>
             <div class="pdf-container">
-                <object data="/library/SEA GYPSIES FEATURE SCREENPLAY.pdf"
+                <object data="/library/SEA GYPSIES DOWNLOAD VERSION.pdf"
                         type="application/pdf"
                         class="pdf-iframe">
                     <div class="pdf-fallback">
                         <p>Your browser doesn't support PDF viewing.</p>
-                        <a href="/library/SEA GYPSIES FEATURE SCREENPLAY.pdf"
+                        <a href="/library/SEA GYPSIES DOWNLOAD VERSION.pdf"
                            download="SEA_GYPSIES_SCREENPLAY.pdf"
                            class="download-link">
                             Download the Script
@@ -168,6 +172,40 @@
         top: 59.47%;   /* 1156px / 1944px */
         width: 86.00%; /* (1009-70)px / 1092px */
         height: 27.52%; /* (1691-1156)px / 1944px */
+    }
+
+    .pitch-deck-button-mobile {
+        position: absolute;
+        left: 50%;
+        top: 54.5%;
+        transform: translateX(-50%);
+        z-index: 5;
+        background: transparent;
+        border: none;
+        padding: 4px 8px;
+        margin: 0;
+        color: #ffffff;
+        font-family: 'apotek-comp', system-ui, -apple-system, sans-serif;
+        font-weight: 300;
+        font-size: clamp(14px, 4vw, 22px);
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: color 0.2s ease, text-shadow 0.2s ease;
+    }
+
+    .pitch-deck-button-mobile .pd-diamond {
+        color: #67f6ff;
+        margin: 0 0.25em;
+        font-size: 0.7em;
+        vertical-align: middle;
+    }
+
+    .pitch-deck-button-mobile:active,
+    .pitch-deck-button-mobile:hover {
+        color: #67f6ff;
+        text-shadow: 0 0 12px rgba(103, 246, 255, 0.6);
     }
 
     .home-button-hotspot {
@@ -531,7 +569,12 @@
 
     private async Task OpenScriptViewer()
     {
-        await JSRuntime.InvokeVoidAsync("open", "/library/SEA GYPSIES FEATURE SCREENPLAY.pdf", "_blank");
+        await JSRuntime.InvokeVoidAsync("open", "/library/SEA GYPSIES DOWNLOAD VERSION.pdf", "_blank");
+    }
+
+    private async Task OpenPitchDeck()
+    {
+        await JSRuntime.InvokeVoidAsync("open", "/library/SEA GYPSIES PITCH DECK.pdf", "_blank");
     }
 
     private void CloseScriptViewer()

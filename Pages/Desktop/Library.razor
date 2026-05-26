@@ -37,6 +37,10 @@
          @onmouseleave="ShowDefault"
          @onclick="NavigateHome"></div>
 
+    <button class="pitch-deck-button" @onclick="OpenPitchDeck">
+      DOWNLOAD <span class="pd-diamond">&#9670;</span> THE PITCH DECK
+    </button>
+
     <ContactButton OnClick="OpenContact" />
 
     <!-- Default Content Area - clickable to open PDF viewer -->
@@ -125,6 +129,38 @@
     position: absolute;
     cursor: pointer;
     z-index: 10;
+  }
+
+  .pitch-deck-button {
+    position: absolute;
+    left: 3.18%;
+    top: 65.5%;
+    z-index: 15;
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+    color: #ffffff;
+    font-family: 'apotek-comp', system-ui, -apple-system, sans-serif;
+    font-weight: 300;
+    font-size: clamp(14px, 1.5vw, 22px);
+    letter-spacing: clamp(2px, 0.4vw, 6px);
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: color 0.2s ease, text-shadow 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .pitch-deck-button .pd-diamond {
+    color: #00d4ff;
+    margin: 0 0.25em;
+    font-size: 0.7em;
+    vertical-align: middle;
+  }
+
+  .pitch-deck-button:hover {
+    color: #00ffff;
+    text-shadow: 0 0 12px rgba(0, 255, 255, 0.6);
   }
 
   .read-hotspot { left: 3.91%; top: 16.67%; width: 26.72%; height: 3.70%; }
@@ -238,7 +274,8 @@
   private bool showVideo = false;
   private bool showDownloadForm = false;
   private bool showContactForm = false;
-  private string scriptUrl = "library/SEA GYPSIES COMPLETE SCRIPT MASTER.pdf";
+  private string scriptUrl = "library/SEA GYPSIES DOWNLOAD VERSION.pdf";
+  private string pitchDeckUrl = "library/SEA GYPSIES PITCH DECK.pdf";
   private DotNetObjectReference<Library>? _selfRef;
 
   protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -288,7 +325,11 @@
   private void OpenScript() { showVideo = false; showScript = true; }
   private async Task OpenScriptInNewTab()
   {
-    await JSRuntime.InvokeVoidAsync("open", "/library/SEA GYPSIES COMPLETE SCRIPT MASTER.pdf", "_blank");
+    await JSRuntime.InvokeVoidAsync("open", "/library/SEA GYPSIES DOWNLOAD VERSION.pdf", "_blank");
+  }
+  private async Task OpenPitchDeck()
+  {
+    await JSRuntime.InvokeVoidAsync("open", "/library/SEA GYPSIES PITCH DECK.pdf", "_blank");
   }
   private void OpenVideo() { showScript = false; showVideo = true; }
   private void CloseContent() { showScript = false; showVideo = false; }
