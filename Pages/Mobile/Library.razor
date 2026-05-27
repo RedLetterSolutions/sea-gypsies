@@ -26,7 +26,7 @@
     <div class="hotspot home-button-hotspot" @onclick="NavigateToHome"></div>
 
     <button class="pitch-deck-button-mobile" @onclick="OpenPitchDeck">
-        DOWNLOAD <span class="pd-diamond">&#9670;</span> THE PITCH DECK
+        DOWNLOAD <img class="pd-sep" src="library/separator_diamond.png?v=1" alt="" /> PITCH DECK
     </button>
 
     <!-- Mobile Navigation Menu (moved out of clipped container) -->
@@ -195,11 +195,12 @@
         transition: color 0.2s ease, text-shadow 0.2s ease;
     }
 
-    .pitch-deck-button-mobile .pd-diamond {
-        color: #67f6ff;
-        margin: 0 0.25em;
-        font-size: 0.7em;
+    .pitch-deck-button-mobile .pd-sep {
+        height: 1.2em;
+        width: auto;
+        margin: 0 0.4em;
         vertical-align: middle;
+        display: inline-block;
     }
 
     .pitch-deck-button-mobile:active,
