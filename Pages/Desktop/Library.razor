@@ -37,8 +37,12 @@
          @onmouseleave="ShowDefault"
          @onclick="NavigateHome"></div>
 
+    <button class="script-download-button" @onclick="ShowDownloadForm">
+      DOWNLOAD <span class="pd-diamond">&#9670;</span> SCRIPT
+    </button>
+
     <button class="pitch-deck-button" @onclick="OpenPitchDeck">
-      DOWNLOAD <span class="pd-diamond">&#9670;</span> THE PITCH DECK
+      DOWNLOAD <span class="pd-diamond">&#9670;</span> PITCH DECK
     </button>
 
     <ContactButton OnClick="OpenContact" />
@@ -134,7 +138,7 @@
   .pitch-deck-button {
     position: absolute;
     left: 3.18%;
-    top: 65.5%;
+    top: 64%;
     z-index: 15;
     background: transparent;
     border: none;
@@ -143,24 +147,47 @@
     color: #ffffff;
     font-family: 'apotek-comp', system-ui, -apple-system, sans-serif;
     font-weight: 300;
-    font-size: clamp(14px, 1.5vw, 22px);
-    letter-spacing: clamp(2px, 0.4vw, 6px);
+    font-size: clamp(20px, 2.2vw, 32px);
+    letter-spacing: clamp(3px, 0.6vw, 9px);
     text-transform: uppercase;
     cursor: pointer;
     transition: color 0.2s ease, text-shadow 0.2s ease;
     white-space: nowrap;
   }
 
-  .pitch-deck-button .pd-diamond {
+  .pitch-deck-button .pd-diamond,
+  .script-download-button .pd-diamond {
     color: #00d4ff;
     margin: 0 0.25em;
     font-size: 0.7em;
     vertical-align: middle;
   }
 
-  .pitch-deck-button:hover {
+  .pitch-deck-button:hover,
+  .script-download-button:hover {
     color: #00ffff;
     text-shadow: 0 0 12px rgba(0, 255, 255, 0.6);
+  }
+
+  .script-download-button {
+    position: absolute;
+    left: 64.7%;
+    top: 86.5%;
+    transform: translateX(-50%);
+    z-index: 15;
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+    color: #ffffff;
+    font-family: 'apotek-comp', system-ui, -apple-system, sans-serif;
+    font-weight: 300;
+    font-size: clamp(16px, 1.7vw, 24px);
+    letter-spacing: clamp(2px, 0.5vw, 7px);
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: color 0.2s ease, text-shadow 0.2s ease;
+    white-space: nowrap;
   }
 
   .read-hotspot { left: 3.91%; top: 16.67%; width: 26.72%; height: 3.70%; }
@@ -275,7 +302,6 @@
   private bool showDownloadForm = false;
   private bool showContactForm = false;
   private string scriptUrl = "library/SEA GYPSIES DOWNLOAD VERSION.pdf";
-  private string pitchDeckUrl = "library/SEA GYPSIES PITCH DECK.pdf";
   private DotNetObjectReference<Library>? _selfRef;
 
   protected override async Task OnAfterRenderAsync(bool firstRender)
