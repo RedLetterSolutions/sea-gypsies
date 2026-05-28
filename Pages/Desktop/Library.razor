@@ -32,7 +32,10 @@
          @onmouseleave="ShowDefault"
          @onclick="NavigateHome"></div>
 
-    <div class="hotspot pitch-deck-hotspot" @onclick="OpenPitchDeck"></div>
+    <div class="hotspot pitch-deck-hotspot"
+         @onmouseenter="ShowPitchDeckHover"
+         @onmouseleave="ShowDefault"
+         @onclick="OpenPitchDeck"></div>
 
     <div class="hotspot script-download-hotspot" @onclick="ShowDownloadForm"></div>
 
@@ -235,10 +238,10 @@
         // Register this page instance so JS can close the modal on success
         _selfRef = DotNetObjectReference.Create(this);
         await JSRuntime.InvokeVoidAsync("setDownloadFormPageRef", _selfRef);
-        await JSRuntime.InvokeVoidAsync("initLibraryBackground", "/library/library_default.png?v=3");
+        await JSRuntime.InvokeVoidAsync("initLibraryBackground", "/library/LIBRARY%20BASE%20PAGE%201.jpeg?v=1");
         var imgs = new[] {
-          "/library/library_default.png?v=3",
-          "/library/library_home.png?v=3"
+          "/library/LIBRARY%20BASE%20PAGE%201.jpeg?v=1",
+          "/library/PITCH%20DECK%20HILITE.jpeg?v=1"
         };
         await JSRuntime.InvokeVoidAsync("preloadImages", imgs);
         // Auto-open contact form if requested via query string (from top-right button on other pages)
@@ -263,9 +266,10 @@
 
   // Do not change the background on "Read the Script" hover
   private Task ShowReadHover() => Task.CompletedTask;
-  private async Task ShowWatchHover() => await JSRuntime.InvokeVoidAsync("setLibraryBackground", "/library/library_default.png?v=3");
+  private async Task ShowWatchHover() => await JSRuntime.InvokeVoidAsync("setLibraryBackground", "/library/LIBRARY%20BASE%20PAGE%201.jpeg?v=1");
   private Task ShowHomeHover() => Task.CompletedTask;
-  private async Task ShowDefault() => await JSRuntime.InvokeVoidAsync("setLibraryBackground", "/library/library_default.png?v=3");
+  private async Task ShowPitchDeckHover() => await JSRuntime.InvokeVoidAsync("setLibraryBackground", "/library/PITCH%20DECK%20HILITE.jpeg?v=1");
+  private async Task ShowDefault() => await JSRuntime.InvokeVoidAsync("setLibraryBackground", "/library/LIBRARY%20BASE%20PAGE%201.jpeg?v=1");
 
   private void OpenScript() { showVideo = false; showScript = true; }
   private async Task OpenScriptInNewTab()
