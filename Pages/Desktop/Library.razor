@@ -264,7 +264,7 @@
   // Do not change the background on "Read the Script" hover
   private Task ShowReadHover() => Task.CompletedTask;
   private async Task ShowWatchHover() => await JSRuntime.InvokeVoidAsync("setLibraryBackground", "/library/library_default.png?v=3");
-  private async Task ShowHomeHover() => await JSRuntime.InvokeVoidAsync("setLibraryBackground", "/library/library_home.png?v=3");
+  private Task ShowHomeHover() => Task.CompletedTask;
   private async Task ShowDefault() => await JSRuntime.InvokeVoidAsync("setLibraryBackground", "/library/library_default.png?v=3");
 
   private void OpenScript() { showVideo = false; showScript = true; }
