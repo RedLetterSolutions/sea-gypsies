@@ -13,6 +13,10 @@
       <div class="library-bg-layer" id="libraryBgB"></div>
     </div>
 
+    <img class="script-title-preview"
+         src="/library/script_title_page.jpeg?v=1"
+         alt="The Sea Gypsies script title page" />
+
     <!-- Invisible hotspots for hover areas -->
     <div class="hotspot read-hotspot"
       @onmouseenter="ShowReadHover"
@@ -127,6 +131,17 @@
     z-index: 10;
   }
 
+  .script-title-preview {
+    position: absolute;
+    left: 8.96%;
+    top: 24.44%;
+    width: 14.17%;
+    height: 32.59%;
+    object-fit: fill;
+    z-index: 2;
+    pointer-events: none;
+  }
+
   .read-hotspot { left: 3.91%; top: 16.67%; width: 26.72%; height: 3.70%; }
   .script-image-hotspot { left: 8.96%; top: 24.35%; width: 14.06%; height: 32.50%; }
   .script-large-hotspot { left: 33.85%; top: 22.22%; width: 61.77%; height: 62.69%; }
@@ -226,7 +241,7 @@
   private bool showVideo = false;
   private bool showDownloadForm = false;
   private bool showContactForm = false;
-  private string scriptUrl = "library/SEA GYPSIES DOWNLOAD VERSION.pdf";
+  private string scriptUrl = "library/SEA GYPSIES SCRIPT DOWNLOAD.pdf";
   private DotNetObjectReference<Library>? _selfRef;
 
   protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -274,7 +289,7 @@
   private void OpenScript() { showVideo = false; showScript = true; }
   private async Task OpenScriptInNewTab()
   {
-    await JSRuntime.InvokeVoidAsync("open", "/library/SEA GYPSIES DOWNLOAD VERSION.pdf", "_blank");
+    await JSRuntime.InvokeVoidAsync("open", "/library/SEA GYPSIES SCRIPT DOWNLOAD.pdf", "_blank");
   }
   private async Task OpenPitchDeck()
   {
