@@ -241,7 +241,7 @@
   private bool showVideo = false;
   private bool showDownloadForm = false;
   private bool showContactForm = false;
-  private string scriptUrl = "library/SEA GYPSIES SCRIPT DOWNLOAD.pdf";
+  private string scriptUrl = "library/SEA GYPSIES SCRIPT DOWNLOAD.pdf?v=20260706";
   private DotNetObjectReference<Library>? _selfRef;
 
   protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -289,11 +289,11 @@
   private void OpenScript() { showVideo = false; showScript = true; }
   private async Task OpenScriptInNewTab()
   {
-    await JSRuntime.InvokeVoidAsync("open", "/library/SEA GYPSIES SCRIPT DOWNLOAD.pdf", "_blank");
+    await JSRuntime.InvokeVoidAsync("open", "/library/SEA GYPSIES SCRIPT DOWNLOAD.pdf?v=20260706", "_blank");
   }
   private async Task OpenPitchDeck()
   {
-    await JSRuntime.InvokeVoidAsync("open", "/library/SEA GYPSIES PITCH DECK.pdf", "_blank");
+    await JSRuntime.InvokeVoidAsync("open", "/library/SEA GYPSIES PITCH DECK.pdf?v=20260706", "_blank");
   }
   private void OpenVideo() { showScript = false; showVideo = true; }
   private void CloseContent() { showScript = false; showVideo = false; }
