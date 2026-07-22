@@ -63,12 +63,12 @@
                 <button class="close-button" @onclick="CloseScriptViewer">×</button>
             </div>
             <div class="pdf-container">
-                <object data="/library/SEA GYPSIES SCRIPT DOWNLOAD.pdf?v=20260706"
+                <object data="/library/SEA GYPSIES SCRIPT DOWNLOAD.pdf?v=20260722"
                         type="application/pdf"
                         class="pdf-iframe">
                     <div class="pdf-fallback">
                         <p>Your browser doesn't support PDF viewing.</p>
-                        <a href="/library/SEA GYPSIES SCRIPT DOWNLOAD.pdf?v=20260706"
+                        <a href="/library/SEA GYPSIES SCRIPT DOWNLOAD.pdf?v=20260722"
                            download="SEA GYPSIES SCRIPT DOWNLOAD.pdf"
                            class="download-link">
                             Download the Script
@@ -570,7 +570,7 @@
 
     private async Task OpenScriptViewer()
     {
-        await JSRuntime.InvokeVoidAsync("open", "/library/SEA GYPSIES SCRIPT DOWNLOAD.pdf?v=20260706", "_blank");
+        await JSRuntime.InvokeVoidAsync("open", "/library/SEA GYPSIES SCRIPT DOWNLOAD.pdf?v=20260722", "_blank");
     }
 
     private async Task OpenPitchDeck()
