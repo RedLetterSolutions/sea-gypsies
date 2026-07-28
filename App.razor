@@ -222,15 +222,17 @@
         // ---------------------------------------------------------------------
         // Formspree endpoints
         // ---------------------------------------------------------------------
-        // Both site forms submit directly to Formspree over AJAX. Replace the two
-        // IDs below with the form IDs from the Formspree dashboard
-        // (Formspree > your form > the "xxxxxxxx" in https://formspree.io/f/xxxxxxxx).
+        // Both site forms submit directly to Formspree over AJAX.
+        // Forms live in the "Sea Gypsies" project on the Formspree account.
+        // Notifications go to admin@redlettersolutions.io.
         //
-        //   contact -> "CONTACT US" modal
-        //   script  -> "DOWNLOAD THE SCRIPT" modal (autoresponse sends the script link)
+        //   contact -> "CONTACT US" modal          (Sea Gypsies - Contact Us)
+        //   script  -> "DOWNLOAD THE SCRIPT" modal (Sea Gypsies - Script Download)
+        //              This form has an Auto Response connected that emails the
+        //              submitter the script download link.
         window.FORMSPREE_ENDPOINTS = {
-            contact: 'https://formspree.io/f/REPLACE_WITH_CONTACT_FORM_ID',
-            script:  'https://formspree.io/f/REPLACE_WITH_SCRIPT_FORM_ID'
+            contact: 'https://formspree.io/f/mgogdnwe',
+            script:  'https://formspree.io/f/mnjewgab'
         };
 
         // Shared AJAX submit for both modals. Keeps the user on the page, preserves
