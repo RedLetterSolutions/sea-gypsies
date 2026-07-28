@@ -15,9 +15,12 @@
         <p class="cf-phone">CALL US: <a href="tel:6098195921" class="cf-phone-link">(609) 819-5921</a></p>
         <p class="cf-subtitle">Or fill out the form below:</p>
 
-        <form data-rls-contact="sea_gypsies" data-rls-redirect="false" id="contactUsForm" data-rls-on-success="handleContactSuccess" data-rls-on-error="handleContactError">
-          <!-- Honeypot (spam protection) -->
-          <input type="text" name="_hp" style="display:none;" tabindex="-1" autocomplete="off">
+        <form id="contactUsForm" method="POST">
+          <!-- Honeypot (spam protection) - Formspree ignores submissions where this is filled -->
+          <input type="text" name="_gotcha" style="display:none;" tabindex="-1" autocomplete="off">
+
+          <!-- Subject line for the notification email Formspree sends -->
+          <input type="hidden" name="_subject" value="Sea Gypsies - Contact Us form submission">
 
           <div class="cf-form">
             <div class="cf-field">

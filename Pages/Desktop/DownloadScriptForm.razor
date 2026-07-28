@@ -1,5 +1,6 @@
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Components
+@implements IDisposable
 
 @if (IsOpen)
 {
@@ -13,9 +14,12 @@
         <h1 class="df-title">DOWNLOAD THE SCRIPT</h1>
         <p class="df-subtitle">Enter your information to receive the script via email:</p>
 
-  <form data-rls-contact="sea_gypsies" data-rls-redirect="false" id="seaGypsiesForm" data-rls-on-success="handleContactSuccess" data-rls-on-error="handleContactError">
-          <!-- Honeypot (spam protection) -->
-          <input type="text" name="_hp" style="display:none;" tabindex="-1" autocomplete="off">
+  <form id="seaGypsiesForm" method="POST">
+          <!-- Honeypot (spam protection) - Formspree ignores submissions where this is filled -->
+          <input type="text" name="_gotcha" style="display:none;" tabindex="-1" autocomplete="off">
+
+          <!-- Subject line for the notification email Formspree sends -->
+          <input type="hidden" name="_subject" value="Sea Gypsies - Script download request">
 
           <!-- Hidden message field -->
           <input type="hidden" name="message" value="Please send me the Sea Gypsies script.">
@@ -72,9 +76,17 @@
   [Inject] private NavigationManager Nav { get; set; } = default!;
   [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
   private bool _initForOpen;
+  private DotNetObjectReference<DownloadScriptForm>? _selfRef;
 
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {
+    if (firstRender)
+    {
+      // Register this instance so JS can close the modal after a successful submit
+      _selfRef = DotNetObjectReference.Create(this);
+      await JSRuntime.InvokeVoidAsync("setDownloadFormPageRef", _selfRef);
+    }
+
     if (IsOpen && !_initForOpen)
     {
       try
@@ -93,9 +105,21 @@
     }
   }
 
+  [JSInvokable]
+  public void CloseDownloadFormFromJS()
+  {
+    OnCancel.InvokeAsync();
+    StateHasChanged();
+  }
+
   private async Task HandleOverlayClick()
   {
     await OnCancel.InvokeAsync();
+  }
+
+  public void Dispose()
+  {
+    _selfRef?.Dispose();
   }
 }
 
