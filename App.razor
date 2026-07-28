@@ -12,7 +12,6 @@
     }
     <!-- Preconnects to speed up first requests to third-party CDNs -->
     <link rel="preconnect" href="https://use.typekit.net" crossorigin>
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <!-- Optional: replace with your Bunny CDN hostname once configured -->
     @if (!string.IsNullOrWhiteSpace(cdnHost)) {
         <text><link rel="preconnect" href="@cdnHost" crossorigin></text>
@@ -176,7 +175,6 @@
     <script src="@CdnPath("cdn.js")"></script>
     <script src="_framework/blazor.server.js"></script>
     <script src="@CdnPath("device-detection.js")"></script>
-    <script src="https://cdn.jsdelivr.net/gh/RedLetterSolutions/rls-contact-forms@main/rls-contact-api.min.js"></script>
     <script>
         // Attempt to lock orientation to portrait where the API allows (installed PWA/fullscreen)
         (function tryLockOrientation() {
@@ -221,23 +219,90 @@
         })();
     </script>
     <script>
-        // Ensure the RLS Contact API is initialized EXACTLY once per page session.
-        // We call this when the modal form first opens so the vendor attaches a single delegated handler.
-        window.ensureRLSInited = function() {
-            if (window.__rlsInited) return true;
-            try {
-                if (window.RLSContact && typeof window.RLSContact.init === 'function') {
-                    window.RLSContact.init({ siteId: 'sea_gypsies' });
-                    window.__rlsInited = true;
-                    return true;
-                } else {
-                    console.warn('[RLS] API not yet loaded');
+        // ---------------------------------------------------------------------
+        // Formspree endpoints
+        // ---------------------------------------------------------------------
+        // Both site forms submit directly to Formspree over AJAX.
+        // Forms live in the "Sea Gypsies" project on the Formspree account.
+        // Notifications go to admin@redlettersolutions.io.
+        //
+        //   contact -> "CONTACT US" modal          (Sea Gypsies - Contact Us)
+        //   script  -> "DOWNLOAD THE SCRIPT" modal (Sea Gypsies - Script Download)
+        //              This form has an Auto Response connected that emails the
+        //              submitter the script download link.
+        window.FORMSPREE_ENDPOINTS = {
+            contact: 'https://formspree.io/f/mgogdnwe',
+            script:  'https://formspree.io/f/mnjewgab'
+        };
+
+        // Shared AJAX submit for both modals. Keeps the user on the page, preserves
+        // the existing toast + modal-close behaviour, and always restores the
+        // buttons afterwards (including on failure).
+        window.submitToFormspree = async function(form, endpoint, selectors) {
+            const sel       = selectors || {};
+            const sendBtn   = sel.send   ? form.querySelector(sel.send)   : null;
+            const cancelBtn = sel.cancel ? form.querySelector(sel.cancel) : null;
+            const closeBtn  = sel.close  ? document.querySelector(sel.close) : null;
+
+            const setBusy = function(busy) {
+                [cancelBtn, closeBtn].forEach(function(btn) {
+                    if (!btn) return;
+                    if (busy) {
+                        btn.setAttribute('disabled', 'true');
+                        btn.setAttribute('aria-disabled', 'true');
+                    } else {
+                        btn.removeAttribute('disabled');
+                        btn.removeAttribute('aria-disabled');
+                    }
+                });
+                if (sendBtn) {
+                    if (busy) {
+                        sendBtn.setAttribute('disabled', 'true');
+                        sendBtn.setAttribute('aria-busy', 'true');
+                    } else {
+                        sendBtn.removeAttribute('disabled');
+                        sendBtn.removeAttribute('aria-busy');
+                    }
                 }
-            } catch (e) {
-                console.error('[RLS] Init error:', e);
+            };
+
+            if (!endpoint || endpoint.indexOf('REPLACE_WITH_') !== -1) {
+                console.error('[Formspree] Endpoint is not configured:', endpoint);
+                window.handleContactError({ message: 'This form is not configured yet. Please try again later.' });
+                return;
             }
-            return false;
-        }
+
+            setBusy(true);
+
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    body: new FormData(form),
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                if (response.ok) {
+                    window.handleContactSuccess({ ok: true });
+                    return;
+                }
+
+                // Formspree returns a JSON body describing what went wrong.
+                let message = 'Something went wrong. Please try again.';
+                try {
+                    const data = await response.json();
+                    if (data && Array.isArray(data.errors) && data.errors.length) {
+                        message = data.errors.map(function(e) { return e.message; }).join(', ');
+                    }
+                } catch { /* non-JSON error body; keep the generic message */ }
+
+                window.handleContactError({ message: message });
+            } catch (err) {
+                console.error('[Formspree] Network error:', err);
+                window.handleContactError({ message: 'Network error. Please check your connection and try again.' });
+            } finally {
+                setBusy(false);
+            }
+        };
 
         // JS <-> Blazor interop for closing the download form
         window.setDownloadFormPageRef = function(dotNetRef) {
@@ -301,32 +366,16 @@
 
         // Initialize the Sea Gypsies contact form (no rebind/retry; just prepare UI and combine name)
         window.initSeaGypsiesContactForm = function() {
-            // Make sure vendor is initialized once (when modal appears)
-            try {
-                if (!window.ensureRLSInited || !window.ensureRLSInited()) {
-                    // Retry shortly if the script hasn't finished loading yet
-                    setTimeout(() => { try { window.ensureRLSInited && window.ensureRLSInited(); } catch {} }, 150);
-                }
-            } catch {}
-
             const form = document.getElementById('seaGypsiesForm');
             if (!form) {
-                console.log('Form not found');
+                console.log('Script download form not found');
                 return;
             }
+            // Avoid binding twice when the modal opens/closes repeatedly
             if (form.dataset.sgInit === '1') {
-                console.log('Form already initialized (sgInit)');
                 return;
             }
             form.dataset.sgInit = '1';
-
-            // Avoid duplicate init when modal opens/closes repeatedly
-            if (form.dataset.rlsInit === '1') {
-                console.log('Form already initialized');
-                return;
-            }
-            form.dataset.rlsInit = '1';
-            console.log('Initializing Sea Gypsies contact form...');
 
             // Keep hidden full name updated as the user types to avoid timing issues
             try {
@@ -346,70 +395,52 @@
                 updateName();
             } catch {}
 
-            // Add submit event listener to combine first/last name before submission
-            // Disable close/cancel while submitting and combine name before submit
+            // Combine first/last name, then hand off to Formspree over AJAX
             form.addEventListener('submit', function(e) {
-                const firstName = document.getElementById('firstNameInput').value.trim();
-                const lastName = document.getElementById('lastNameInput').value.trim();
+                e.preventDefault();
+
+                const firstEl = document.getElementById('firstNameInput');
+                const lastEl = document.getElementById('lastNameInput');
                 const hiddenName = document.getElementById('hiddenName');
 
-                // Combine first and last name
+                const firstName = firstEl && firstEl.value ? firstEl.value.trim() : '';
+                const lastName = lastEl && lastEl.value ? lastEl.value.trim() : '';
                 let fullName = `${firstName} ${lastName}`.trim();
                 if (!fullName) {
                     fullName = 'Script Download Request';
                 }
+                if (hiddenName) hiddenName.value = fullName;
 
-                hiddenName.value = fullName;
-                console.log('Combined name:', fullName);
-                // Disable cancel/close during submission
-                try {
-                    const cancelBtn = form.querySelector('.df-cancel');
-                    const sendBtn = form.querySelector('.df-send');
-                    const closeBtn = document.querySelector('.df-close');
-                    if (cancelBtn) { cancelBtn.setAttribute('disabled', 'true'); cancelBtn.setAttribute('aria-disabled', 'true'); }
-                    if (closeBtn) { closeBtn.setAttribute('disabled', 'true'); closeBtn.setAttribute('aria-disabled', 'true'); }
-                    if (sendBtn) { sendBtn.setAttribute('aria-busy', 'true'); }
-                } catch {}
+                window.submitToFormspree(form, window.FORMSPREE_ENDPOINTS.script, {
+                    send: '.df-send',
+                    cancel: '.df-cancel',
+                    close: '.df-close'
+                });
             }, false);
-
-            console.log('Form initialized successfully');
         };
 
         // Initialize the Contact Us form
         window.initContactUsForm = function() {
-            // Make sure vendor is initialized once (when modal appears)
-            try {
-                if (!window.ensureRLSInited || !window.ensureRLSInited()) {
-                    // Retry shortly if the script hasn't finished loading yet
-                    setTimeout(() => { try { window.ensureRLSInited && window.ensureRLSInited(); } catch {} }, 150);
-                }
-            } catch {}
-
             const form = document.getElementById('contactUsForm');
             if (!form) {
                 console.log('Contact form not found');
                 return;
             }
-            if (form.dataset.rlsInit === '1') {
-                console.log('Contact form already initialized');
+            // Avoid binding twice when the modal opens/closes repeatedly
+            if (form.dataset.cfInit === '1') {
                 return;
             }
-            form.dataset.rlsInit = '1';
-            console.log('Initializing Contact Us form...');
+            form.dataset.cfInit = '1';
 
-            // Disable close/cancel while submitting
             form.addEventListener('submit', function(e) {
-                try {
-                    const cancelBtn = form.querySelector('.cf-cancel');
-                    const sendBtn = form.querySelector('.cf-send');
-                    const closeBtn = document.querySelector('.cf-close');
-                    if (cancelBtn) { cancelBtn.setAttribute('disabled', 'true'); cancelBtn.setAttribute('aria-disabled', 'true'); }
-                    if (closeBtn) { closeBtn.setAttribute('disabled', 'true'); closeBtn.setAttribute('aria-disabled', 'true'); }
-                    if (sendBtn) { sendBtn.setAttribute('aria-busy', 'true'); }
-                } catch {}
-            }, false);
+                e.preventDefault();
 
-            console.log('Contact form initialized successfully');
+                window.submitToFormspree(form, window.FORMSPREE_ENDPOINTS.contact, {
+                    send: '.cf-send',
+                    cancel: '.cf-cancel',
+                    close: '.cf-close'
+                });
+            }, false);
         };
     </script>
     <script>
