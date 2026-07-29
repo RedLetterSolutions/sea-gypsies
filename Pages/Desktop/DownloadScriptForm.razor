@@ -261,7 +261,8 @@
     border: 2px solid #00d4ff;
     color: #00d4ff;
     font-family: 'apotek-comp', system-ui, -apple-system, sans-serif;
-    font-size: clamp(15px, 1.4vw, 18px);
+    /* Min stays >=16px so iOS Safari doesn't zoom the page on focus */
+    font-size: clamp(17px, 1.7vw, 21px);
     font-weight: 300;
     letter-spacing: 3px;
     text-transform: uppercase;
@@ -471,8 +472,8 @@
     }
 
     .df-input {
-      padding: 6px 10px;
-      font-size: 13px;
+      padding: 8px 10px;
+      font-size: 16px;
     }
 
     .df-button-row {
